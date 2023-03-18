@@ -222,7 +222,7 @@ class CaviarModel:
                      4 if self.model == 'asymmetric' else 1
         
         # tau, intercept, coefssss
-        bounds = [(1e-4, None), (None, None)] + [(-1, 1) for i in range(num_params - 1)]
+        bounds = [(1e-4, None), (None, None)] + [(0, 1) for i in range(num_params - 1)]
         return np.random.uniform(0, 1, 1 + num_params), bounds
     
     def get_empirical_quantile(self, returns, until_first=300):
