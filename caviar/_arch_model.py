@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 
+
 class GarchModel:
     def __init__(self, p, q):
         self.p = p
@@ -61,7 +62,7 @@ class GarchModel:
     def fit(self, returns):
         """return scipy optimize result"""
         params = np.random.uniform(0, 1, self.p + 1)
-        bounds = [(0, None)] + [(0, 1) for i in range(self.p)]
+        bounds = [(0, None)] + [(0, 1) for _ in range(self.p)]
         returns = np.array(returns)
         self.res = minimize(self.neg_log_likelihood, params, args=(returns), bounds=bounds)
         return self.res
