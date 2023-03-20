@@ -1,5 +1,6 @@
 # CAViaR-Project
-## Docs
+for estimating Conditional Autoregressive Value at Risk (CAViaR) models.
+## 4 types of CAViaR model in Engle & Manganelli, 2004
 ### Adaptive:
 $f_{t}(\beta_{1}) = f_{t-1}(\beta_{1}) + \beta_{1} \cdot ([1 + \exp(G[y_{t-1} - f_{t-1}(\beta_{1})])]^{-1} - \theta )$
 
@@ -11,6 +12,8 @@ $f_t(\beta) = \beta_{1} + \beta_{2} f_{t-1}(\beta) + \beta_{3} \cdot max(y_{t-1}
 
 ### IGARCH(1, 1):
 $f_t(\beta) = \sqrt{\beta_{1} + \beta_{2} f_{t-1}^2(\beta) + \beta_{3} y_{t-1}^2}$
+
+## Doc
 ```
 class CaViarModel(quantile, model, method='numeric', G=10, tol=1e-10)
 
