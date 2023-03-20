@@ -45,7 +45,7 @@ def asymmetric_slope(returns, betas, quantile):
     sigmas = np.zeros_like(returns)
     sigmas[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(sigmas)):
-        sigmas[t] = b1 + b2 * sigmas[t - 1] + max(b3 * returns[t - 1], 0) + b4 * min(b3 * returns[t - 1], 0)
+        sigmas[t] = b1 + b2 * sigmas[t - 1] + max(b3 * returns[t - 1], 0) - b4 * min(b3 * returns[t - 1], 0)
     return sigmas
 
 

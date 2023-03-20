@@ -1,3 +1,6 @@
+# Author: Lee Yat Shun, Jasper
+# Copyright (c) 2023 Lee Yat Shun, Jasper. All rights reserved.
+
 import numpy as np
 from scipy.optimize import minimize
 
@@ -10,8 +13,11 @@ def mle_fit(returns, model, quantile, caviar_func):
     params, bounds = initiate_params(model)
     result = minimize(neg_log_likelihood, params,
                       args=(returns, quantile, caviar_func), bounds=bounds)
-
-    return result.x
+    
+    params = result.x
+    tau = params[0]
+    betas = params[1:]
+    return betas
 
 
 def initiate_params(model):
@@ -23,17 +29,19 @@ def initiate_params(model):
     whereas the second allows the response to positive and negative returns
     to be different. All three are mean-reverting in the sense that
     the coefficient on the lagged VaR is not constrained to be 1.
+    
+    β ∈ Rp
     """
     # bounds for tau, intercept
-    bounds = [(1e-4, None), (None, None)]
+    bounds = [(1e-10, None), (None, None)] # for tau, b0
     if model == 'igarch':
-        bounds += [(0, 1), (0, 1)]
+        bounds += [(-1, 1), (-1, 1)] # for b1, b2
     elif model == 'symmetric':
         # b1 for lagged var, b2 for abs(lagged return)
-        bounds += [(0, 1), (0, 1)]
+        bounds += [(-1, 1), (-1, 1)] # for b1, b2
     elif model == 'asymmetric':
         # b1 for lagged var, b2 for (lagged return)^+, b3 for (lagged return)^-
-        bounds = [(0, 1), (0, 1), (0, 1)]
+        bounds = [(-1, 1), (-1, 1), (-1, 1)] # for b1, b2, b3
     else:  # adaptive
         pass
 
