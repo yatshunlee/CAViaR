@@ -1,11 +1,15 @@
+# Author: Lee Yat Shun, Jasper
+# Copyright (c) 2023 Lee Yat Shun, Jasper. All rights reserved.
+
 import numpy as np
 from ._numeric import numeric_fit
 from ._frequentist import mle_fit
 from ._caviar_function import adaptive, symmetric_abs_val, asymmetric_slope, igarch
+from time import time
 
 
 class CaviarModel:
-    def __init__(self, quantile=0.05, model='asymmetric', method='numeric', G=10, tol=1e-10):
+    def __init__(self, quantile=0.05, model='symmetric', method='numeric', G=10, tol=1e-10):
         """
         CaviarModel is a class for estimating Conditional Autoregressive Value at Risk (CAViaR) models.
         
@@ -42,22 +46,24 @@ class CaviarModel:
                 'Method must be one of {"numeric (Engle & Manganelli, 2004)", "mle (Maximum Likelihood Estimation)"}'
             )
 
-    def obj(self, betas, returns, quantile, caviar):
+    def obj(self, beta, returns, quantile, caviar):
         """
-        :param: betas (array-like): parameters of CAVIAR function
+        :param: beta (array-like): parameters of CAVIAR function
         :param: returns (array-like): a series of returns
+        :param: quantile (float): a value between 0 and 1
         :param: caviar (callable function): a CAVIAR function
         :return: quantile regression loss
         """
-        sigmas = caviar(returns, betas, quantile)
+        sigmas = caviar(returns, beta, quantile)
         dev = returns - sigmas
         e = np.where(dev < 0, (self.quantile - 1) * dev, self.quantile * dev)
         return np.sum(e)
 
     def fit(self, log_returns):
         """
-        :param: log_returns (array-like): a series of log returns
+        :param: log_returns (array-like): a series of log returns (demeaned)
         """
+        # computed the daily returns as 100 times the difference of the log of the prices.
         returns = np.array(log_returns) * 100
 
         # select the CAViaR function
@@ -70,9 +76,25 @@ class CaviarModel:
             self.caviar = asymmetric_slope
         else:  # IGARCH
             self.caviar = igarch
-
+            
+        s = time()
         if self.method == 'numeric':
-            self.beta = numeric_fit(returns, self.model, self.quantile, self.caviar, self.obj, self.tol)
+            self.beta = numeric_fit(returns,
+                                    self.model,
+                                    self.quantile,
+                                    self.caviar,
+                                    self.obj,
+                                    self.tol)
 
         elif self.method == 'mle':
-            self.beta = mle_fit(returns, self.model, self.quantile, self.caviar)
+            self.beta = mle_fit(returns, 
+                                self.model, 
+                                self.quantile, 
+                                self.caviar)
+        
+        # print statistics
+        print('Final loss:', self.obj(self.beta,
+                                      returns,
+                                      self.quantile,
+                                      self.caviar))
+        print(f'Time taken(s): {time() - s:.2f}')

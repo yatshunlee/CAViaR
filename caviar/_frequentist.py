@@ -5,32 +5,38 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-def mle_fit(returns, model, quantile, caviar_func):
+def mle_fit(returns, model, quantile, caviar):
     """
     :param: returns (array): a series of daily returns
-    :returns: scipy optimize result
+    :param: model (str): Type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}.
+    :param: quantile (float): a value between 0 and 1
+    :param: caviar (callable function): a CAViaR function that returns VaR
+    :returns: optimized beta
     """
     params, bounds = initiate_params(model)
-    result = minimize(neg_log_likelihood, params,
-                      args=(returns, quantile, caviar_func), bounds=bounds)
     
+    while True:
+        result = minimize(neg_log_likelihood, params,
+                          args=(returns, quantile, caviar), bounds=bounds)
+        if result.success:
+            break
+    
+    print(result)
     params = result.x
     tau = params[0]
-    betas = params[1:]
-    return betas
+    beta = params[1:]
+    return beta
 
 
 def initiate_params(model):
     """
-    generate the initial estimate of tau and betas
-
-    for the bounds and constraints:
-    The symmetric and igarch of these respond symmetrically to past returns,
-    whereas the second allows the response to positive and negative returns
-    to be different. All three are mean-reverting in the sense that
-    the coefficient on the lagged VaR is not constrained to be 1.
-    
+    Generate the initial estimate of tau and beta.
+    All three are mean-reverting in the sense that the coefficient on the lagged VaR is not constrained to be 1.
+    i.e.
     β ∈ Rp
+    
+    :param: model (str): Type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}.
+    :returns: parameters, corresponding bounds for the parameters
     """
     # bounds for tau, intercept
     bounds = [(1e-10, None), (None, None)] # for tau, b0
@@ -40,30 +46,33 @@ def initiate_params(model):
         # b1 for lagged var, b2 for abs(lagged return)
         bounds += [(-1, 1), (-1, 1)] # for b1, b2
     elif model == 'asymmetric':
+        # notice that the boundaries are required to keep in 0, 1. Any reason?
         # b1 for lagged var, b2 for (lagged return)^+, b3 for (lagged return)^-
-        bounds = [(-1, 1), (-1, 1), (-1, 1)] # for b1, b2, b3
+        bounds += [(0, 1), (0, 1), (0, 1)] # for b1, b2, b3
     else:  # adaptive
         pass
 
     # number of parameters
     p = len(bounds)
+    params = np.random.uniform(0, 1, p)
 
-    return np.random.uniform(0, 1, p), bounds
+    return params, bounds
 
 
-def neg_log_likelihood(params, returns, quantile, caviar_func):
+def neg_log_likelihood(params, returns, quantile, caviar):
     """
+    :param: params (array): a series of tau and coefficients
     :param: returns (array): a series of daily returns
-    :param: betas (array): a series of coefficients
-    :param: caviar_func (callable function): a CAViaR function that returns VaR
+    :param: quantile (float): a value between 0 and 1
+    :param: caviar (callable function): a CAViaR function that returns VaR
     :returns: negative log likelihood
     """
     T = len(returns)
 
     tau = params[0]
-    betas = params[1:]
+    beta = params[1:]
 
-    sigmas = caviar_func(returns, betas)
+    sigmas = caviar(returns, beta, quantile)
 
     llh = (1 - T) * np.log(tau)
     for t in range(1, T):
