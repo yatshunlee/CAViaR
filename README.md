@@ -38,13 +38,14 @@ log_returns = ... # some returns in array, series, list, ...
 
 # initiate parameter
 quantile = 0.05 # 5% VAR
-mod = 'asymmetric' # asymmetric slope caviar function
+mod = 'symmetric' # asymmetric slope caviar function
 
 # fitting process
-caviar_model = CaViarModel(quantile, mod)
+caviar_model = CaviarModel(quantile, mod)
 caviar_model.fit(log_returns)
 
 # result
 beta = caviar_model.beta
-vars = caviar_model.caviar(log_returns, betas, quantile)
+vars = caviar_model.caviar(log_returns*100, beta, quantile)
+print("No. samples out of VAR (normalized):", sum(np.where(returns*100 <= vars, 1, 0))/returns.shape[0])
 ```
