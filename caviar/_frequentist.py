@@ -39,7 +39,7 @@ def initiate_params(model):
     :returns: parameters, corresponding bounds for the parameters
     """
     # bounds for tau, intercept
-    bounds = [(1e-10, None), (None, None)] # for tau, b0
+    bounds = [(1e-10, None), (-1, 1)] # for tau, b0
     if model == 'igarch':
         bounds += [(-1, 1), (-1, 1)] # for b1, b2
     elif model == 'symmetric':
@@ -48,7 +48,7 @@ def initiate_params(model):
     elif model == 'asymmetric':
         # notice that the boundaries are required to keep in 0, 1. Any reason?
         # b1 for lagged var, b2 for (lagged return)^+, b3 for (lagged return)^-
-        bounds += [(0, 1), (0, 1), (0, 1)] # for b1, b2, b3
+        bounds += [(-1, 1), (-1, 1), (-1, 1)] # for b1, b2, b3
     else:  # adaptive
         pass
 
