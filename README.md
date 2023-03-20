@@ -18,10 +18,12 @@ $f_t(\beta) = \sqrt{\beta_{1} + \beta_{2} f_{t-1}^2(\beta) + \beta_{3} y_{t-1}^2
 class CaViarModel(quantile, model, method='numeric', G=10, tol=1e-10)
 
 parameters:
-- quantile (float): quantile value between 0 and 1 exclusively
-- model (str): type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}
+- quantile (float): Quantile value between 0 and 1 exclusively. Default is 0.05
+- model (str): Type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}
+               Default is "asymmetric", i.e., asymmetric slope.
 - method (str): Estimation method. Must be one of {"numeric (Engle & Manganelli, 2004)",
-                "mle (Maximum Likelihood Estimation)"}. Default is "numeric".
+                "mle (Maximum Likelihood Estimation)"}.
+                Default is "numeric".
 - G (int): Smoothen version of the indicator function. Some positive number. Default is 10.
 - tol (float): Tolerance level for optimization. Default is 1e-10.
 
