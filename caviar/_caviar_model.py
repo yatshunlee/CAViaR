@@ -54,8 +54,8 @@ class CaviarModel:
         :param: caviar (callable function): a CAVIAR function
         :return: quantile regression loss
         """
-        sigmas = caviar(returns, beta, quantile)
-        dev = returns - sigmas
+        VaR = caviar(returns, beta, quantile)
+        dev = returns - VaR
         e = np.where(dev < 0, (self.quantile - 1) * dev, self.quantile * dev)
         return np.sum(e)
 

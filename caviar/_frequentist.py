@@ -72,11 +72,11 @@ def neg_log_likelihood(params, returns, quantile, caviar):
     tau = params[0]
     beta = params[1:]
 
-    sigmas = caviar(returns, beta, quantile)
+    VaR = caviar(returns, beta, quantile)
 
     llh = (1 - T) * np.log(tau)
     for t in range(1, T):
-        llh -= 1 / tau * max((quantile - 1) * (returns[t] - sigmas[t]),
-                             quantile * (returns[t] - sigmas[t]))
+        llh -= 1 / tau * max((quantile - 1) * (returns[t] - VaR[t]),
+                             quantile * (returns[t] - VaR[t]))
 
     return -llh

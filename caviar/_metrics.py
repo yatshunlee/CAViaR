@@ -3,11 +3,11 @@
 
 import numpy as np
 
-def hit(returns, vars, quantile):
+def hit(returns, VaRs, quantile):
     """
     :params: returns (array):
-    :params: vars (array):
+    :params: VaRs (array):
     :params: quantile (float):
     returns: hit (%)
     """
-    return sum(np.where(returns*100 <= vars, 1, 0))/returns.shape[0])
+    return sum(np.where(returns*100 <= VaRs, 1, 0))/returns.shape[0])

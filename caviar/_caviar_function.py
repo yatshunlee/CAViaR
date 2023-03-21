@@ -25,12 +25,12 @@ def adaptive(returns, betas, quantile, G=10):
     :returns: VaR
     """
     b1 = betas[0]
-    sigmas = np.zeros_like(returns)
-    sigmas[0] = get_empirical_quantile(returns, quantile)
-    for t in range(1, len(sigmas)):
-        sigmas[t] = sigmas[t - 1] + b1 * (
-                1 / (1 + np.exp(G * (returns[t - 1] - sigmas[t - 1]))) - quantile)
-    return sigmas
+    VaR = np.zeros_like(returns)
+    VaR[0] = get_empirical_quantile(returns, quantile)
+    for t in range(1, len(VaR)):
+        VaR[t] = VaR[t - 1] + b1 * (
+                1 / (1 + np.exp(G * (returns[t - 1] - VaR[t - 1]))) - quantile)
+    return VaR
 
 
 def symmetric_abs_val(returns, betas, quantile):
@@ -41,11 +41,11 @@ def symmetric_abs_val(returns, betas, quantile):
     :returns: VaR
     """
     b1, b2, b3 = betas
-    sigmas = np.zeros_like(returns)
-    sigmas[0] = get_empirical_quantile(returns, quantile)
-    for t in range(1, len(sigmas)):
-        sigmas[t] = b1 + b2 * sigmas[t - 1] + b3 * abs(returns[t - 1])
-    return sigmas
+    VaR = np.zeros_like(returns)
+    VaR[0] = get_empirical_quantile(returns, quantile)
+    for t in range(1, len(VaR)):
+        VaR[t] = b1 + b2 * VaR[t - 1] + b3 * abs(returns[t - 1])
+    return VaR
 
 
 def asymmetric_slope(returns, betas, quantile):
@@ -56,11 +56,11 @@ def asymmetric_slope(returns, betas, quantile):
     :returns: VaR
     """
     b1, b2, b3, b4 = betas
-    sigmas = np.zeros_like(returns)
-    sigmas[0] = get_empirical_quantile(returns, quantile)
-    for t in range(1, len(sigmas)):
-        sigmas[t] = b1 + b2 * sigmas[t - 1] + max(b3 * returns[t - 1], 0) + b4 * min(b3 * returns[t - 1], 0)
-    return sigmas
+    VaR = np.zeros_like(returns)
+    VaR[0] = get_empirical_quantile(returns, quantile)
+    for t in range(1, len(VaR)):
+        VaR[t] = b1 + b2 * VaR[t - 1] + max(b3 * returns[t - 1], 0) + b4 * min(b3 * returns[t - 1], 0)
+    return VaR
 
 
 def igarch(returns, betas, quantile):
@@ -73,10 +73,10 @@ def igarch(returns, betas, quantile):
     :returns: VaR
     """
     b1, b2, b3 = betas
-    sigmas = np.zeros_like(returns)
-    sigmas[0] = get_empirical_quantile(returns, quantile)
-    for t in range(1, len(sigmas)):
-        sigmas[t] = (b1 + b2 * sigmas[t - 1] ** 2 + b3 * returns[t - 1] ** 2) ** 0.5
+    VaR = np.zeros_like(returns)
+    VaR[0] = get_empirical_quantile(returns, quantile)
+    for t in range(1, len(VaR)):
+        VaR[t] = (b1 + b2 * VaR[t - 1] ** 2 + b3 * returns[t - 1] ** 2) ** 0.5
         if quantile < 0.5:
-            sigmas[t] *= -1
-    return sigmas
+            VaR[t] *= -1
+    return VaR
