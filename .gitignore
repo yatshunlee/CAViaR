@@ -1,4 +1,5 @@
 # Ignore the directories:
+.idea/
 data/
 __pycache__/
 papers/
