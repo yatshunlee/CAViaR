@@ -14,7 +14,7 @@ def get_empirical_quantile(returns, quantile, until_first=300):
     :returns: VaR
     """
     return np.quantile(returns[:until_first], quantile)
-
+    
 
 def adaptive(returns, betas, quantile, G=10):
     """
@@ -80,3 +80,16 @@ def igarch(returns, betas, quantile):
         if quantile < 0.5:
             VaR[t] *= -1
     return VaR
+
+
+# def get_VaR(returns, betas, quantile, model):
+#     VaR = np.zeros_like(returns)
+#     VaR[0] = get_empirical_quantile(returns, quantile)
+    
+#     if model == 'symmetric':
+#         b1, 
+#     elif model == 'asymmetric':
+#     elif model == 'adaptive':
+#     elif model == 'igarch':
+#     else:
+#         raise ValueError('Wrong model')

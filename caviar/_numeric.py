@@ -29,9 +29,9 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol):
                 'loss': loss
             }
         )
-        # delete later
-        print('Alpha version: m = 1. Only run once. Break!')
-        break
+#         # delete later
+#         print('Alpha version: m = 1. Only run once. Break!')
+#         break
 
     result = sorted(result, key=lambda x: x['loss'])
     return result[0]['beta']
@@ -73,7 +73,10 @@ def initialize_betas(returns, model, caviar, obj, quantile):
         m = 10
         p = 3
     
+    # for faster version
     n = 1000
+    m = 3
+    
     print(f'Generating {m} best initial betas out of {n}...')
     random_betas = np.random.uniform(0, 1, (n, p))
 
@@ -89,8 +92,10 @@ def initialize_betas(returns, model, caviar, obj, quantile):
 
         best_initial_betas = sorted(best_initial_betas, key=lambda x: x['loss'])
 
-        if len(best_initial_betas) == m:
+        if len(best_initial_betas) == m+1:
             best_initial_betas.pop()
+        
+        break # might delete later
 
     return best_initial_betas
 
@@ -101,25 +106,11 @@ def optimize(initial_beta, returns, quantile, obj, caviar, tol):
     
     count = 0
     print(f'Update {count}:', current_loss)
+    
+    bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
     while True:
-        # Minimize the function using the Nelder-Mead algorithm
-        res = minimize(obj, current_beta, args=(returns, quantile, caviar), method='Nelder-Mead')
-        if not res.success:
-            raise 
-        current_beta = res.x
-
-        loss = res.fun
-        
-        count += 1   
-        print(f'Update {count}:', loss)
-        
-        if current_loss - loss < tol:
-            break
-        else:
-            current_loss = loss
-
-        # Minimize the function using the BFGS algorithm
-        res = minimize(obj, current_beta, args=(returns, quantile, caviar), method='BFGS')
+        # Minimize the function using the BFGS algorithm # might delete later
+        res = minimize(obj, current_beta, args=(returns, quantile, caviar), bounds=bounds)
         current_beta = res.x
 
         loss = res.fun
@@ -131,5 +122,33 @@ def optimize(initial_beta, returns, quantile, obj, caviar, tol):
             break
         else:
             current_loss = loss
+            
+#         # Minimize the function using the Nelder-Mead algorithm
+#         res = minimize(obj, current_beta, args=(returns, quantile, caviar), method='Nelder-Mead', bounds=bounds)
+#         current_beta = res.x
+
+#         loss = res.fun
+        
+#         count += 1   
+#         print(f'Update {count}:', loss)
+        
+#         if current_loss - loss < tol:
+#             break
+#         else:
+#             current_loss = loss
+
+#         # Minimize the function using the BFGS algorithm
+#         res = minimize(obj, current_beta, args=(returns, quantile, caviar), method='BFGS', bounds=bounds)
+#         current_beta = res.x
+
+#         loss = res.fun
+        
+#         count += 1   
+#         print(f'Update {count}:',loss)
+        
+#         if current_loss - loss < tol:
+#             break
+#         else:
+#             current_loss = loss
         
     return current_beta, loss

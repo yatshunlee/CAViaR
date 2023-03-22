@@ -5,6 +5,7 @@ import numpy as np
 from ._numeric import numeric_fit
 from ._frequentist import mle_fit
 from ._caviar_function import adaptive, symmetric_abs_val, asymmetric_slope, igarch
+from ._utils import plot_caviar, plot_news_impact_curve
 from time import time
 
 
@@ -55,16 +56,17 @@ class CaviarModel:
         :return: quantile regression loss
         """
         VaR = caviar(returns, beta, quantile)
-        dev = returns - VaR
-        e = np.where(dev < 0, (self.quantile - 1) * dev, self.quantile * dev)
-        return np.sum(e)
+        residuals = returns - VaR
+        hit = self.quantile - (returns < VaR)
+        T = len(returns)
+        return residuals @ hit / T
 
-    def fit(self, log_returns):
+    def fit(self, returns):
         """
-        :param: log_returns (array-like): a series of log returns (demeaned)
+        :param: returns (array-like): a series of returns
         """
         # computed the daily returns as 100 times the difference of the log of the prices.
-        returns = np.array(log_returns) * 100
+        returns = np.array(returns) * 100
 
         # select the CAViaR function
         # symmetric and igarch: 3 betas; asymmetric: 4 betas; adaptive: 1 beta
@@ -98,3 +100,10 @@ class CaviarModel:
                                       self.quantile,
                                       self.caviar))
         print(f'Time taken(s): {time() - s:.2f}')
+        
+    def plot_caviar(self, returns):
+        plot_caviar(returns, self.beta, self.quantile, self.model, self.caviar)
+        
+    def plot_news_impact_curve(self, VaR=-1.645):
+        plot_news_impact_curve(self.beta, self.model, self.quantile, VaR, self.G)
+        
