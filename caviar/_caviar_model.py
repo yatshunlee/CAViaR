@@ -101,8 +101,20 @@ class CaviarModel:
                                       self.caviar))
         print(f'Time taken(s): {time() - s:.2f}')
         
+    def predict(self, returns):
+        returns = np.array(returns) * 100
+        VaR = self.caviar(returns, self.beta, self.quantile)
+        return VaR
+        
+    
     def plot_caviar(self, returns):
-        plot_caviar(returns, self.beta, self.quantile, self.model, self.caviar)
+        try:
+            x_axis = returns.index
+        except:
+            x_axis = None
+        returns = np.array(returns) * 100
+        VaR = self.caviar(returns, self.beta, self.quantile)
+        plot_caviar(returns, VaR, self.quantile, self.model, x_axis)
         
     def plot_news_impact_curve(self, VaR=-1.645):
         plot_news_impact_curve(self.beta, self.model, self.quantile, VaR, self.G)

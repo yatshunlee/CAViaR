@@ -4,15 +4,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_caviar(returns, beta, quantile, model, caviar):
-    try:
-        x_axis = returns.index
+def plot_caviar(returns, VaR, quantile, model, x_axis=None):
+    if x_axis is not None:
         x_lbl = 'date'
-    except:
+    else:
         x_axis = range(len(returns))
         x_lbl = 'time'
-    returns = np.array(returns) * 100
-    VaR = caviar(returns, beta, quantile)
     
     fig, axes = plt.subplots(2, 1, figsize=(8, 6*2))
     

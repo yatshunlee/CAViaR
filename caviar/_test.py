@@ -2,17 +2,39 @@
 # Copyright (c) 2023 Lee Yat Shun, Jasper. All rights reserved.
 
 import numpy as np
-from np.linalg import inv
-from scipy.stats import chi2
+from numpy.linalg import inv
+from scipy.stats import chi2, binom_test
 
-def hit(returns, VaRs, quantile):
+
+def binomial_test(returns, VaRs, quantile):
     """
+    null hypothesis that the probability of success/failure in a Bernoulli experiment is p.
+    
     :params: returns (array):
     :params: VaRs (array):
     :params: quantile (float):
-    returns: hit (%)
+    :returns: two-sided binomial test
     """
-    return sum(np.where(returns*100 <= VaRs, 1, 0))/returns.shape[0])
+    k = count_violations(returns, VaRs) # number of failures
+    n = len(returns) # num of total observations
+    return binom_test(k, n, p=quantile)
+
+def vrate(returns, VaRs):
+    """
+    :params: returns (array):
+    :params: VaRs (array):
+    returns: VRate (%): the violation rate
+    """
+    return count_violations(returns, VaRs)/returns.shape[0]
+    
+def count_violations(returns, VaRs):
+    """
+    :params: returns (array):
+    :params: VaRs (array):
+    :returns: number of violations
+    """
+    returns = np.array(returns)*100
+    return np.sum(returns < VaRs)
     
 def dq_test(in_sample_mode, model, T, returns, quantile, VaR, hit, D, gradient, LAGS=4):
     """
@@ -28,13 +50,15 @@ def dq_test(in_sample_mode, model, T, returns, quantile, VaR, hit, D, gradient, 
     :param: D (np.array): matrix
     :param: gradient (np.array): vector
     """
+    returns = np.array(returns) * 100
+    
     # Compute the quantile residuals
     residuals = returns - VaR
     
     # Set up the bandwidth for the KNN algorithm
     sorted_result = np.sort(residuals)
     k = 40 if quantile == 0.01 else 60
-    bandwidth = sorted_result[k]
+    bandwidth = - sorted_result[k]
     
     constant = np.ones(T - LAGS)
     HIT = hit[LAGS+1:]
@@ -84,13 +108,14 @@ def variance_covariance(beta, model, T, returns, quantile, VaR):
     :param: quantile (float)
     :param: VaR (np.array):
     """
+    returns = np.array(returns) * 100
     # Compute the quantile residuals
     residuals = returns - VaR
     
     # Set up the bandwidth for the KNN algorithm
     sorted_result = np.sort(residuals)
     k = 40 if quantile == 0.01 else 60
-    bandwidth = sorted_result[k]
+    bandwidth = - sorted_result[k]
     t = 0
     
     # initialize vectors
@@ -99,8 +124,8 @@ def variance_covariance(beta, model, T, returns, quantile, VaR):
     derivative3 = np.zeros((T, 1))
     derivative4 = np.zeros((T, 1))
     
-    D = np.zeros(beta.shape[0])
-    A = D
+    D = np.zeros((beta.shape[0], beta.shape[0]))
+    A = np.copy(D)
     
     if model == 'adaptive':
         gradient = np.zeros((T, 1))
@@ -120,11 +145,11 @@ def variance_covariance(beta, model, T, returns, quantile, VaR):
             gradient[i, 1] = derivative2[i]
             gradient[i, 2] = derivative3[i]
             
-            A = A + gradient[i, :].T @ gradient[i, :] # this one should be a matrix
+            A = A + gradient[[i], :].T @ gradient[[i], :] # this one should be a matrix
             
             if abs(residuals[i]) <= bandwidth:
                 t += 1
-                D = D + gradient[i, :].T @ gradient[i, :] # this one should be a matrix
+                D = D + gradient[[i], :].T @ gradient[[i], :] # this one should be a matrix
                 
     elif model == 'igarch':
         gradient = np.zeros((T, 3))

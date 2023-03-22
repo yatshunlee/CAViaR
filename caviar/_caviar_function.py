@@ -16,15 +16,15 @@ def get_empirical_quantile(returns, quantile, until_first=300):
     return np.quantile(returns[:until_first], quantile)
     
 
-def adaptive(returns, betas, quantile, G=10):
+def adaptive(returns, beta, quantile, G=10):
     """
     :param: returns (array): a series of daily returns
-    :param: betas (array): a series of coefficients
+    :param: beta (array): a series of coefficients
     :param: quantile (float): a value between 0 and 1
     :param: G (int): some positive number for the smoothen version of indicator function
     :returns: VaR
     """
-    b1 = betas[0]
+    b1 = beta[0]
     VaR = np.zeros_like(returns)
     VaR[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(VaR)):
@@ -33,14 +33,14 @@ def adaptive(returns, betas, quantile, G=10):
     return VaR
 
 
-def symmetric_abs_val(returns, betas, quantile):
+def symmetric_abs_val(returns, beta, quantile):
     """
     :param: returns (array): a series of daily returns
-    :param: betas (array): a series of coefficients
+    :param: beta (array): a series of coefficients
     :param: quantile (float): a value between 0 and 1
     :returns: VaR
     """
-    b1, b2, b3 = betas
+    b1, b2, b3 = beta
     VaR = np.zeros_like(returns)
     VaR[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(VaR)):
@@ -48,14 +48,14 @@ def symmetric_abs_val(returns, betas, quantile):
     return VaR
 
 
-def asymmetric_slope(returns, betas, quantile):
+def asymmetric_slope(returns, beta, quantile):
     """
     :param: returns (array): a series of daily returns
-    :param: betas (array): a series of coefficients
+    :param: beta (array): a series of coefficients
     :param: quantile (float): a value between 0 and 1
     :returns: VaR
     """
-    b1, b2, b3, b4 = betas
+    b1, b2, b3, b4 = beta
     VaR = np.zeros_like(returns)
     VaR[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(VaR)):
@@ -63,16 +63,16 @@ def asymmetric_slope(returns, betas, quantile):
     return VaR
 
 
-def igarch(returns, betas, quantile):
+def igarch(returns, beta, quantile):
     """
     Notice that the sigma here is negative root of the sqrt term
     
     :param: returns (array): a series of daily returns
-    :param: betas (array): a series of coefficients
+    :param: beta (array): a series of coefficients
     :param: quantile (float): a value between 0 and 1
     :returns: VaR
     """
-    b1, b2, b3 = betas
+    b1, b2, b3 = beta
     VaR = np.zeros_like(returns)
     VaR[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(VaR)):
@@ -82,7 +82,7 @@ def igarch(returns, betas, quantile):
     return VaR
 
 
-# def get_VaR(returns, betas, quantile, model):
+# def get_VaR(returns, beta, quantile, model):
 #     VaR = np.zeros_like(returns)
 #     VaR[0] = get_empirical_quantile(returns, quantile)
     
