@@ -48,13 +48,13 @@ def dq_test(in_sample_mode, model, T, returns, quantile, VaR, hit, D, gradient, 
     :param: VaR (np.array):
     :param: hit (np.array):
     :param: D (np.array): matrix
-    :param: gradient (np.array): vector
+    :param: gradient (np.array): gradient vector for out-of-sample mode
     """
     returns = np.array(returns) * 100
     
     # Compute the quantile residuals
     residuals = returns - VaR
-    
+
     # Set up the bandwidth for the KNN algorithm
     sorted_result = np.sort(residuals)
     k = 40 if quantile == 0.01 else 60
@@ -63,39 +63,36 @@ def dq_test(in_sample_mode, model, T, returns, quantile, VaR, hit, D, gradient, 
     constant = np.ones(T - LAGS)
     HIT = hit[LAGS+1:]
     VaR_forecast = VaR[LAGS+1:]
-    y_lag = y[LAGS:T-1]
+    # y_lag = y[LAGS:T-1]
     
     Z = np.zeros((T - LAGS, LAGS))
     for i in range(LAGS):
         Z[:, i] = Hit[i:T - (LAGS + 1 -i)]
     
-    X_out = np.c_[constant, VaR_forecast, Z]
-    X_in = Z
-    
-    XHNABLA = np.zeros((X_in.shape[1], gradient.shape[1]))
-    NABLA = gradient[LAGS+1:, :]
-    
     # estimate the matrices for in-sample DQ test
     if in_sample_mode:
+        X_in = Z
+        XHNABLA = np.zeros((X_in.shape[1], gradient.shape[1]))
+        NABLA = gradient[LAGS+1:, :]
         for i in range(1, X_in.shape[0]):
             if abs(residuals[i]) > bandwidth:
                 continue
-            XHNABLA += X_in[i, :] @ gradient[i, :]
+            XHNABLA += X_in[[i], :].T @ gradient[[i], :]
     
-    XHNABLA = XHNABLA / (2 * bandwidth * T)
-    
-    M = X_in.T - XHNABLA @ np.linalg.inv(D) @ NABLA.T
-    
-    # compute the DQ tests
-    DQ_stat_in = HIT.T @ X_in @ inv(M @ M.T) @ X_in.T @ HIT / (quantile * (1 - quantile))
-    DQ_stat_out = HIT.T @ X_out @ inv(X_out.T @ X_out) @ X_out.T @ HIT / (quantile * (1 - quantile))
-    
-    DQ_pval_in = chi2.cdf(DQ_stat_in, df=X_in.shape[2])
-    DQ_pval_out = chi2.cdf(DQ_stat_out, df=X_out.shape[2])
-    
-    if in_sample_mode:
+        XHNABLA = XHNABLA / (2 * bandwidth * T)
+
+        M = X_in.T - XHNABLA @ inv(D) @ NABLA.T
+
+        # compute the DQ tests
+        DQ_stat_in = HIT.T @ X_in @ inv(M @ M.T) @ X_in.T @ HIT / (quantile * (1 - quantile))
+        DQ_pval_in = chi2.cdf(DQ_stat_in, df=X_in.shape[2])
         return DQ_pval_in 
-    return DQ_pval_out
+        
+    else:
+        X_out = np.c_[constant, VaR_forecast, Z]
+        DQ_stat_out = HIT.T @ X_out @ inv(X_out.T @ X_out) @ X_out.T @ HIT / (quantile * (1 - quantile))
+        DQ_pval_out = chi2.cdf(DQ_stat_out, df=X_out.shape[2])
+        return DQ_pval_out
 
 def variance_covariance(beta, model, T, returns, quantile, VaR):
     """
@@ -130,16 +127,18 @@ def variance_covariance(beta, model, T, returns, quantile, VaR):
     if model == 'adaptive':
         gradient = np.zeros((T, 1))
         pass
+    
     elif model == 'asymmetric':
         gradient = np.zeros((T, 4))
         pass
+    
     elif model == 'symmetric':
         gradient = np.zeros((T, 3))
         
         for i in range(1, T):
             derivative1[i] = 1 + beta[1] * derivative1[i-1]
             derivative2[i] = VaR[i-1] + beta[1] * derivative2[i-1]
-            derivative3[i] = beta[1] * derivative3[i-1] + abs(returns[i-1])
+            derivative3[i] = abs(returns[i-1]) + beta[1] * derivative3[i-1]
             
             gradient[i, 0] = derivative1[i]
             gradient[i, 1] = derivative2[i]
