@@ -107,15 +107,15 @@ class CaviarModel:
                                       self.quantile,
                                       self.caviar))
         
-#         # To compute the variance and covariance matrix
-#         T = len(returns)
-#         VaRs = self.predict(returns)
-#         self.vc_matrix, self.D, self.gradient = variance_covariance(
-#             self.beta, self.model, T, returns, self.quantile, VaRs, self.G
-#         )
+        # To compute the variance and covariance matrix
+        T = len(returns)
+        VaRs = self.predict(returns)
+        self.vc_matrix, self.D, self.gradient = variance_covariance(
+            self.beta, self.model, T, returns, self.quantile, VaRs, self.G
+        )
         
-#         # To compute the standard errors of betas as well as the p values
-#         self.beta_standard_errors, self.beta_pvals = compute_se_pval(self.beta, self.vc_matrix)
+        # To compute the standard errors of betas as well as the p values
+        self.beta_standard_errors, self.beta_pvals = compute_se_pval(self.beta, self.vc_matrix)
         
         print(f'Time taken(s): {time() - s:.2f}')
         
@@ -123,15 +123,35 @@ class CaviarModel:
         returns = np.array(returns)
         VaRs = self.caviar(returns, self.beta, self.quantile)
         return VaRs
+    
+    def forecast(self, return_ytd, VaR_ytd):
+        if self.model == 'adaptive':
+            b1 = self.beta[0]
+            return VaR_ytd + b1 * (
+                1 / (1 + np.exp(self.G * (return_ytd - VaR_ytd))) - self.quantile
+            )
         
-#     def dq_test(self, returns, test_mode):
-#         VaRs = self.predict(returns)
-#         if test_mode == 'in':
-#             return dq_test(True, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
-#         elif test_mode == 'out':
-#             return dq_test(False, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
-#         else:
-#             raise ValueError('Test mode must be one of {"in", "out"}')
+        elif self.model == 'symmetric':
+            b1, b2, b3 = self.beta
+            return b1 + b2 * VaR_ytd + b3 * abs(return_ytd)
+        
+        elif self.model == 'asymmetric':
+            b1, b2, b3, b4 = self.beta
+            return b1 + b2 * VaR_ytd + b3 * max(return_ytd, 0) + b4 * min(return_ytd, 0)
+        
+        else:  # IGARCH
+            b1, b2, b3 = self.beta
+            VaR = (b1 + b2 * VaR_ytd ** 2 + b3 * return_ytd ** 2) ** 0.5
+            return - VaR
+        
+    def dq_test(self, returns, test_mode):
+        VaRs = self.predict(returns)
+        if test_mode == 'in':
+            return dq_test(True, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
+        elif test_mode == 'out':
+            return dq_test(False, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
+        else:
+            raise ValueError('Test mode must be one of {"in", "out"}')
     
     def plot_caviar(self, returns):
         try:

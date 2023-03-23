@@ -19,7 +19,7 @@ def plot_caviar(returns, VaR, quantile, model, x_axis=None):
     axes[0].set_ylabel('CAViaR')
     
     axes[1].plot(x_axis, returns, label='return')
-    axes[1].plot(x_axis, VaR, label='- VaR')
+    axes[1].plot(x_axis, VaR, label='negative VaR')
     hit = sum(returns < VaR) / len(returns)
     axes[1].set_title(f'Hit Rate: {hit:.4f}')
     axes[1].set_xlabel(x_lbl)

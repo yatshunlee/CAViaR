@@ -39,9 +39,10 @@ def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, LAGS=4)
     residuals = returns - VaRs
 
     # Set up the bandwidth for the KNN algorithm
-    sorted_result = np.sort(residuals)
+    sorted_result = np.sort(abs(residuals))
     k = 40 if quantile == 0.01 else 60
-    bandwidth = - sorted_result[k]
+    bandwidth = sorted_result[k]
+    print('bandwidth:', bandwidth)
     
     constant = np.ones(T - LAGS)
     HIT = hit[LAGS:]
@@ -98,10 +99,12 @@ def variance_covariance(beta, model, T, returns, quantile, VaRs, G):
     residuals = returns - VaRs
     
     # Set up the bandwidth for the KNN algorithm
-    sorted_result = np.sort(residuals)
+    sorted_result = np.sort(abs(residuals))
     k = 40 if quantile == 0.01 else 60
-    bandwidth = - sorted_result[k]
+    bandwidth = sorted_result[k]
     t = 0
+    
+    print('bandwidth:', bandwidth)
     
     # initialize vectors
     derivative1 = np.zeros((T, 1))
@@ -201,7 +204,7 @@ def variance_covariance(beta, model, T, returns, quantile, VaRs, G):
     t_std_err = t # check the bandwidth
     A = A / T
     D = D / (2 * bandwidth * T)
-    
+
     vc_matrix = (quantile * (1 - quantile) / T) * (inv(D) @ A @ inv(D))
     
     return vc_matrix, D, gradient

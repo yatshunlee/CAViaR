@@ -29,7 +29,8 @@ def adaptive(returns, beta, quantile, G=10):
     VaR[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(VaR)):
         VaR[t] = VaR[t - 1] + b1 * (
-                1 / (1 + np.exp(G * (returns[t - 1] - VaR[t - 1]))) - quantile)
+                1 / (1 + np.exp(G * (returns[t - 1] - VaR[t - 1]))) - quantile
+        )
     return VaR
 
 
@@ -59,7 +60,7 @@ def asymmetric_slope(returns, beta, quantile):
     VaR = np.zeros_like(returns)
     VaR[0] = get_empirical_quantile(returns, quantile)
     for t in range(1, len(VaR)):
-        VaR[t] = b1 + b2 * VaR[t - 1] + max(b3 * returns[t - 1], 0) + b4 * min(b3 * returns[t - 1], 0)
+        VaR[t] = b1 + b2 * VaR[t - 1] + b3 * max(returns[t - 1], 0) + b4 * min(returns[t - 1], 0)
     return VaR
 
 
