@@ -5,12 +5,14 @@ import numpy as np
 from ._numeric import numeric_fit
 from ._frequentist import mle_fit
 from ._caviar_function import adaptive, symmetric_abs_val, asymmetric_slope, igarch
+from ._dq_test import compute_se_pval, variance_covariance, dq_test
 from ._utils import plot_caviar, plot_news_impact_curve
+from scipy.stats import norm
 from time import time
 
 
 class CaviarModel:
-    def __init__(self, quantile=0.05, model='symmetric', method='numeric', G=10, tol=1e-10):
+    def __init__(self, quantile=0.05, model='symmetric', method='numeric', G=10, tol=1e-10, LAGS=4):
         """
         CaviarModel is a class for estimating Conditional Autoregressive Value at Risk (CAViaR) models.
         
@@ -22,13 +24,19 @@ class CaviarModel:
                              Default is "numeric".
         :param: G (int): Smoothen version of the indicator function. Some positive number. Default is 10.
         :param: tol (float): Tolerance level for optimization. Default is 1e-10.
+        :param: LAGS (int): Default is 4.
         """
         self.beta = None
         self.p = None
         self.caviar = None
+        
+        self.vc_matrix = None
+        self.D = None
+        self.gradient = None
 
         self.G = G
         self.tol = tol
+        self.LAGS = LAGS
 
         if 0 < quantile < 1:
             self.quantile = quantile
@@ -63,11 +71,10 @@ class CaviarModel:
 
     def fit(self, returns):
         """
-        :param: returns (array-like): a series of returns
+        :param: returns (array-like): a series of returns (100x)
         """
-        # computed the daily returns as 100 times the difference of the log of the prices.
-        returns = np.array(returns) * 100
-
+        returns = np.array(returns)
+        
         # select the CAViaR function
         # symmetric and igarch: 3 betas; asymmetric: 4 betas; adaptive: 1 beta
         if self.model == 'adaptive':
@@ -99,20 +106,39 @@ class CaviarModel:
                                       returns,
                                       self.quantile,
                                       self.caviar))
+        
+#         # To compute the variance and covariance matrix
+#         T = len(returns)
+#         VaRs = self.predict(returns)
+#         self.vc_matrix, self.D, self.gradient = variance_covariance(
+#             self.beta, self.model, T, returns, self.quantile, VaRs, self.G
+#         )
+        
+#         # To compute the standard errors of betas as well as the p values
+#         self.beta_standard_errors, self.beta_pvals = compute_se_pval(self.beta, self.vc_matrix)
+        
         print(f'Time taken(s): {time() - s:.2f}')
         
     def predict(self, returns):
-        returns = np.array(returns) * 100
-        VaR = self.caviar(returns, self.beta, self.quantile)
-        return VaR
+        returns = np.array(returns)
+        VaRs = self.caviar(returns, self.beta, self.quantile)
+        return VaRs
         
+#     def dq_test(self, returns, test_mode):
+#         VaRs = self.predict(returns)
+#         if test_mode == 'in':
+#             return dq_test(True, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
+#         elif test_mode == 'out':
+#             return dq_test(False, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
+#         else:
+#             raise ValueError('Test mode must be one of {"in", "out"}')
     
     def plot_caviar(self, returns):
         try:
             x_axis = returns.index
         except:
             x_axis = None
-        returns = np.array(returns) * 100
+        returns = np.array(returns)
         VaR = self.caviar(returns, self.beta, self.quantile)
         plot_caviar(returns, VaR, self.quantile, self.model, x_axis)
         

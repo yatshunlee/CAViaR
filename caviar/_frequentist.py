@@ -13,6 +13,9 @@ def mle_fit(returns, model, quantile, caviar):
     :param: caviar (callable function): a CAViaR function that returns VaR
     :returns: optimized beta
     """
+    # compute the daily returns as 100 times the difference of the log of the prices.
+    returns = np.array(returns)
+    
     params, bounds = initiate_params(model)
     
     while True:

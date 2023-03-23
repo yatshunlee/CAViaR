@@ -15,10 +15,14 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol):
     :param: quantile (float): a value between 0 and 1
     :param: tol (float): a very small positive number. Default is 1e-10
     """
+    # compute the daily returns as 100 times the difference of the log of the prices.
+    returns = np.array(returns)
+    
     initial_betas = initialize_betas(returns, model, caviar, obj, quantile)
     result = []
     
-    print('Optimizing by simplex method and quasi-newton method...')
+    # print('Optimizing by simplex method and quasi-newton method...')
+    print('Optimizing...')
     
     for m, initial_beta in enumerate(initial_betas):
         print(f'when m = {m+1}')
@@ -29,9 +33,6 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol):
                 'loss': loss
             }
         )
-#         # delete later
-#         print('Alpha version: m = 1. Only run once. Break!')
-#         break
 
     result = sorted(result, key=lambda x: x['loss'])
     return result[0]['beta']
@@ -95,7 +96,7 @@ def initialize_betas(returns, model, caviar, obj, quantile):
         if len(best_initial_betas) == m+1:
             best_initial_betas.pop()
         
-        break # might delete later
+#         break # might delete later
 
     return best_initial_betas
 
