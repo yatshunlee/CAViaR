@@ -13,8 +13,7 @@ $f_t(\beta) = \beta_{1} + \beta_{2} f_{t-1}(\beta) + \beta_{3} \cdot max(y_{t-1}
 ### IGARCH(1, 1):
 $f_t(\beta) = \sqrt{\beta_{1} + \beta_{2} f_{t-1}^2(\beta) + \beta_{3} y_{t-1}^2}$
 
-## Doc
-### Example of fitting a CAViaR model with asymmetric slope
+## Example of fitting a CAViaR model with asymmetric slope
 ```
 log_returns = ... # some returns in array, series, list, ...
 in_samples = log_returns [2000:-2000] * 100
