@@ -42,7 +42,6 @@ def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, LAGS=4)
     sorted_result = np.sort(abs(residuals))
     k = 40 if quantile == 0.01 else 60
     bandwidth = sorted_result[k]
-    print('bandwidth:', bandwidth)
     
     constant = np.ones(T - LAGS)
     HIT = hit[LAGS:]
@@ -103,8 +102,6 @@ def variance_covariance(beta, model, T, returns, quantile, VaRs, G):
     k = 40 if quantile == 0.01 else 60
     bandwidth = sorted_result[k]
     t = 0
-    
-    print('bandwidth:', bandwidth)
     
     # initialize vectors
     derivative1 = np.zeros((T, 1))

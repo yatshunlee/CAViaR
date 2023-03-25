@@ -18,11 +18,19 @@ def mle_fit(returns, model, quantile, caviar):
     
     params, bounds = initiate_params(model)
     
+    count = 0
     while True:
         result = minimize(neg_log_likelihood, params,
                           args=(returns, quantile, caviar), bounds=bounds)
         if result.success:
             break
+        if count >= 5:
+            # generate new starting point again
+            print('Fail to converge after 5 times. Start with new param again.')
+            params, bounds = initiate_params(model)
+            count = 0
+            # raise ConvergenceError('Fail to converge after 5 times. Try numerical approach.')
+        count += 1
     
     print(result)
     params = result.x
@@ -83,3 +91,10 @@ def neg_log_likelihood(params, returns, quantile, caviar):
                              quantile * (returns[t] - VaR[t]))
 
     return -llh
+
+class ConvergenceError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return f"ConvergenceError: {self.message}"

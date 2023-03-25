@@ -2,35 +2,79 @@
 # Copyright (c) 2023 Lee Yat Shun, Jasper. All rights reserved.
 
 import numpy as np
+import pandas as pd
 from scipy.stats import chi2, binom_test
 
 
 def binomial_test(returns, VaRs, quantile):
     """
-    null hypothesis that the probability of success/failure in a Bernoulli experiment is p.
+    null hypothesis: the probability of success/failure in a Bernoulli experiment is p.
+    
+    https://ww2.mathworks.cn/help/risk/overview-of-var-backtesting.html
     
     :params: returns (array):
     :params: VaRs (array):
     :params: quantile (float):
     :returns: two-sided binomial test
     """
-    k = count_violations(returns, VaRs) # number of failures
+    k = np.sum(returns < VaRs) # number of failures
     n = len(returns) # num of total observations
     return binom_test(k, n, p=quantile)
 
-def vrate(returns, VaRs):
+
+def kupiec_pof_test(returns, VaRs, quantile):
     """
-    :params: returns (array):
-    :params: VaRs (array):
-    returns: VRate (%): the violation rate
-    """
-    return count_violations(returns, VaRs)/returns.shape[0]
+    null hypothesis: the observed failure rate is equal to
+                     the failure rate suggested by the confidence interval.
+                     
+    This statistic is asymptotically distributed as a chi-square variable with 1 degree of freedom.
+    https://ww2.mathworks.cn/help/risk/overview-of-var-backtesting.html
     
-def count_violations(returns, VaRs):
+    :param: returns (array-like):
+    :param: VaRs (array-like):
+    :param: quantile (float):
+    :returns: pvalue
     """
-    :params: returns (array):
-    :params: VaRs (array):
-    :returns: number of violations
+    p = 1 - quantile
+    x = np.array(returns < VaRs).sum()
+    N = len(returns)
+    
+    numerator = (1 - p) ** (N-x) * p ** x
+    denominator = (1 - x / N) ** (N-x) * (x / N) ** x
+    LR_POF = -2 * np.log(numerator / denominator)
+    return chi2.cdf(LR_POF, df=1)
+    
+    
+def christoffersen_test(returns, VaRs):
     """
-    returns = np.array(returns)
-    return np.sum(returns < VaRs)
+    independence test by Christoffersen, 1998
+    null hypothesis: the observations are independent of each other
+    
+    This statistic is asymptotically distributed as a chi-square variable with 1 degree of freedom.
+    https://ww2.mathworks.cn/help/risk/overview-of-var-backtesting.html
+    
+    :param: returns (array-like):
+    :param: VaRs (array-like):
+    :param: quantile (float):
+    :returns: pvalue
+    """
+    violations = np.array(returns < VaRs) * 1
+    diff = violations[:-1] - violations[1:] # current one - followed by
+    
+    # Number of periods with no failures followed by a period with failures.
+    n01 = (diff==-1).sum() 
+    # Number of periods with failures followed by a period with no failures.
+    n10 = (diff==1).sum()
+    # Number of periods with no failures followed by a period with no failures.
+    n00 = (violations[1:][diff==0]==0).sum()
+    # Number of periods with failures followed by a period with failures.
+    n11 = (violations[1:][diff==0]==1).sum()
+    
+    pi0 = n01 / (n00 + n01) # pr(fail given no fail at t-1)
+    pi1 = n11 / (n10 + n11) # pr(fail given fail at t-1)
+    pi = (n01 + n11) / (n00 + n01 + n10 + n11) # pr(fail on t)
+    
+    numerator = (1 - pi) ** (n00 + n10) * pi ** (n01 + n11)
+    denominator = (1 - pi0) ** n00 * pi0 ** n01 * (1 - pi1) ** n10 * pi1 ** n11
+    LR_CCI = -2 * np.log(numerator / denominator)
+    return chi2.cdf(LR_CCI, df=1)

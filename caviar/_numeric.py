@@ -116,6 +116,10 @@ def optimize(initial_beta, returns, quantile, obj, caviar, tol):
 
         loss = res.fun
         
+        if count >= 5:
+            print('Fail for the initialized beta. Skip.')
+            break
+        
         count += 1   
         print(f'Update {count}:',loss)
         

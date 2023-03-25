@@ -9,8 +9,11 @@ chatgpt.docx
 # Include the directories:
 !caviar/
 !tests/
+!var_tests/
+!backtesting/
 !dashboard
 !author_code
+papers/review of backtest for var.pdf
 papers/CAViaR.pdf
 papers/Bayesian Time-Varying Quantile Forecasting for Value-at-Risk in Financial Markets.pdf
 papers/Forecasting Value-at-Risk using nonlinear regression quantiles and the intra-day range.pdf
