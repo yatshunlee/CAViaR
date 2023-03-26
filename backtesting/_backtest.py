@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=0.002):
     """
     replace the return over q%-quantile VaR from day 1 to day T
+    
+    logic behind: stong hold if nothing happens (no violation)
+    once log(low/open) touches the VaR => sell immediately
+    and you buy it back at the closing price when the market is almost closed.
+    
     :param: returns (array-like): returns from day 0 to day T
     :param: low_open_log_difference (array-like): log(Low) - log(Open) from day 0 to day T
     :param: VaRs (CaviarModel object): VaR for day 1 to day T+1: VaR_t = f(info at time t-1)

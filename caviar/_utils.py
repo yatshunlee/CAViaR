@@ -18,8 +18,11 @@ def plot_caviar(returns, VaR, quantile, model, x_axis=None):
     axes[0].set_xlabel(x_lbl)
     axes[0].set_ylabel('CAViaR')
     
-    axes[1].plot(x_axis, returns, label='return')
-    axes[1].plot(x_axis, VaR, label='negative VaR')
+    axes[1].plot(x_axis, returns, label='return', zorder=1)
+    axes[1].plot(x_axis, VaR, label='negative VaR', zorder=2)
+    violations_x = x_axis[returns < VaR]
+    violations_y = VaR[returns < VaR]
+    axes[1].scatter(violations_x, violations_y, s=20, c='k', marker='^', label='violation', zorder=3)
     hit = sum(returns < VaR) / len(returns)
     axes[1].set_title(f'Hit Rate: {hit:.4f}')
     axes[1].set_xlabel(x_lbl)
