@@ -75,8 +75,8 @@ def initialize_betas(returns, model, caviar, obj, quantile):
         p = 3
     
     # for faster version
-    n = 1000
-    m = 3
+    n = 5000
+    m = 5
     
     print(f'Generating {m} best initial betas out of {n}...')
     random_betas = np.random.uniform(0, 1, (n, p))
@@ -110,7 +110,7 @@ def optimize(initial_beta, returns, quantile, obj, caviar, tol):
     
     bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
     while True:
-        # Minimize the function using the BFGS algorithm # might delete later
+        # Minimize the function directly
         res = minimize(obj, current_beta, args=(returns, quantile, caviar), bounds=bounds)
         current_beta = res.x
 

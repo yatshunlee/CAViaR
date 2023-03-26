@@ -3,10 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def backtest(returns, VaRs, quantile, ntl=100, penalty=0.002):
+def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=0.002):
     """
     replace the return over q%-quantile VaR from day 1 to day T
     :param: returns (array-like): returns from day 0 to day T
+    :param: low_open_log_difference (array-like): log(Low) - log(Open) from day 0 to day T
     :param: VaRs (CaviarModel object): VaR for day 1 to day T+1: VaR_t = f(info at time t-1)
             as the returns are from 0 to T => VaR are for 1 to T+1
     :param: ntl (float): positive notional. Default is 100.
@@ -21,13 +22,14 @@ def backtest(returns, VaRs, quantile, ntl=100, penalty=0.002):
     
     backtest_df = pd.DataFrame({
         'ret': returns[1:] / 100,
+        'low/open': low_open_log_difference[1:],
         'VaR': VaRs[:-1] / 100
     })
     
     original = ntl * (1 + backtest_df.ret).cumprod()
     
     new = (1 + np.maximum(backtest_df['ret'], backtest_df['VaR']))
-    new = new * ((backtest_df['ret'] < backtest_df['VaR']) * -penalty + 1)
+    new = new * ((backtest_df['low/open'] < backtest_df['VaR']) * -penalty + 1)
     new = ntl * new.cumprod()
     
     plt.figure(figsize=(8, 6))
