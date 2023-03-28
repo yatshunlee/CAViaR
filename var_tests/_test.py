@@ -3,7 +3,7 @@
 
 import numpy as np
 import pandas as pd
-from scipy.stats import chi2, binom_test
+from scipy.stats import chi2, binom_test, binom, norm
 
 
 def binomial_test(returns, VaRs, quantile):
@@ -20,6 +20,35 @@ def binomial_test(returns, VaRs, quantile):
     k = np.sum(returns < VaRs) # number of failures
     n = len(returns) # num of total observations
     return binom_test(k, n, p=quantile)
+
+
+def traffic_light_test(returns, VaRs, quantile, num_obs=250, baseline=3):
+    """
+    For notation: Pr = Pr(X<=k|quantile)
+    
+    if Pr <= 0.95: return green (accurate)
+    else if Pr <= 0.99: return yellow (between accurate and inaccurate)
+    else: return red (totally inaccurate)
+    
+    :param: returns (array-like):
+    :param: VaRs (array-like):
+    :param: quantile (float):
+    :param: num_obs (int): last Default is 250.
+    :param: baseline (int): Default is 3.
+    :returns: tl (string): either green, yellow, or red
+    :returns: p (float): between 0 to 1.
+    :returns: scale_factor (float): between 0 to 1.
+    """
+    num_violations = np.sum(returns[-num_obs:] < VaRs[-num_obs:])
+    
+    z_assumed = norm.ppf(var_level)
+    z_observed = norm.ppf(num_violations / num_obs)
+    p = binom.cdf(num_violations, num_obs, quantile)
+    
+    tl = 'green' if p <= 0.95 else 'yellow' if p <= 0.9999 else 'red'
+    scale_factor = baseline * (z_ass/z_obs - 1) if tl == 'yellow' else 0 if tl == 'green' else 1
+    
+    return tl, p, scale_factor
 
 
 def kupiec_pof_test(returns, VaRs, quantile):
