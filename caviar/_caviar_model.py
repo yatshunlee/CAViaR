@@ -29,6 +29,8 @@ class CaviarModel:
         self.beta = None
         self.p = None
         self.caviar = None
+        self.VaR0_in = None
+        self.VaR0_out = None
         
         self.vc_matrix = None
         self.D = None
@@ -54,8 +56,23 @@ class CaviarModel:
             raise ValueError(
                 'Method must be one of {"numeric (Engle & Manganelli, 2004)", "mle (Maximum Likelihood Estimation)"}'
             )
+            
+    def __repr__(self):
+        return (f"CaviarModel(quantile={self.quantile}, model={self.model}, "
+                f"method={self.method}, G={self.G}, tol={self.tol}, LAGS={self.LAGS})")
+    
+    def get_empirical_quantile(self, returns, quantile, until_first=300):
+        """
+        :param: returns (array): a series of daily returns
+        :param: quantile (float): a value between 0 and 1
+        :param: until_first (int): To compute the VaR series with the CAViaR models, we initialize f1(β)
+                                   to the empirical θ-quantile of the first 300 observations.
+                                   Default is 300 (days).
+        :returns: VaR
+        """
+        return np.quantile(returns[:until_first], quantile)
 
-    def obj(self, beta, returns, quantile, caviar):
+    def obj(self, beta, returns, quantile, caviar, VaR0):
         """
         :param: beta (array-like): parameters of CAVIAR function
         :param: returns (array-like): a series of returns
@@ -63,7 +80,7 @@ class CaviarModel:
         :param: caviar (callable function): a CAVIAR function
         :return: quantile regression loss
         """
-        VaR = caviar(returns, beta, quantile)
+        VaR = caviar(returns, beta, quantile, VaR0, self.G)
         residuals = returns - VaR
         hit = self.quantile - (returns < VaR)
         T = len(returns)
@@ -74,6 +91,8 @@ class CaviarModel:
         :param: returns (array-like): a series of returns (100x)
         """
         returns = np.array(returns)
+        # starting point VaR_0 = unconditional sampling quantile
+        self.VaR0_in = self.get_empirical_quantile(returns, self.quantile)
         
         # select the CAViaR function
         # symmetric and igarch: 3 betas; asymmetric: 4 betas; adaptive: 1 beta
@@ -93,23 +112,29 @@ class CaviarModel:
                                     self.quantile,
                                     self.caviar,
                                     self.obj,
-                                    self.tol)
+                                    self.tol,
+                                    self.VaR0_in)
 
         elif self.method == 'mle':
             self.beta = mle_fit(returns, 
                                 self.model, 
                                 self.quantile, 
-                                self.caviar)
+                                self.caviar,
+                                self.VaR0_in,
+                                self.G)
         
         # print statistics
         print('Final loss:', self.obj(self.beta,
                                       returns,
                                       self.quantile,
-                                      self.caviar))
+                                      self.caviar,
+                                      self.VaR0_in))
         
         # To compute the variance and covariance matrix
         T = len(returns)
-        VaRs = self.predict(returns)
+        VaRs = self.predict(returns, self.VaR0_in)
+        self.VaR0_out = VaRs[-1]
+        
         self.vc_matrix, self.D, self.gradient = variance_covariance(
             self.beta, self.model, T, returns, self.quantile, VaRs, self.G
         )
@@ -119,12 +144,24 @@ class CaviarModel:
         
         print(f'Time taken(s): {time() - s:.2f}')
         
-    def predict(self, returns):
+    def predict(self, returns, VaR0=None):
+        """
+        :param: returns (array-like): a series of returns
+        :param: VaR0 (float): Initial VaR0. Default is the VaR0 (out-of-samples)
+        """
+        if VaR0 is None:
+            VaR0 = self.VaR0_out
         returns = np.array(returns)
-        VaRs = self.caviar(returns, self.beta, self.quantile)
+        VaRs = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
         return VaRs
     
     def forecast(self, return_ytd, VaR_ytd):
+        """
+        predict today's VaR (unknown)
+        :param: return_ytd (float): return yesterday
+        :param: VaR_ytd (float): VaR yesterday
+        :returns: VaR forecast today
+        """
         if self.model == 'adaptive':
             b1 = self.beta[0]
             return VaR_ytd + b1 * (
@@ -145,6 +182,10 @@ class CaviarModel:
             return - VaR
         
     def dq_test(self, returns, test_mode):
+        """
+        :param: returns (array-like):
+        :param: test_mode (str): either 'in' or 'out' => 'in samples' or 'out of samples'
+        """
         VaRs = self.predict(returns)
         if test_mode == 'in':
             return dq_test(True, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
@@ -153,15 +194,31 @@ class CaviarModel:
         else:
             raise ValueError('Test mode must be one of {"in", "out"}')
     
-    def plot_caviar(self, returns):
+    def plot_caviar(self, returns, mode):
+        """
+        plot the positive VaR and the violations in the fitting process
+        :param: returns (array-like):
+        """
+        if mode == 'in':
+            VaR0 = self.VaR0_in
+        elif mode == 'out':
+            VaR0 = self.VaR0_out
+        else:
+            raise ValueError('mode must be either "in" or "out".')
+        
         try:
             x_axis = returns.index
         except:
             x_axis = None
         returns = np.array(returns)
-        VaR = self.caviar(returns, self.beta, self.quantile)
+        VaR = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
         plot_caviar(returns, VaR, self.quantile, self.model, x_axis)
         
     def plot_news_impact_curve(self, VaR=-1.645):
+        """
+        visualizing how return_t-1 affect the VaR_t
+        by fixing the VaR_t-1
+        where news = return
+        """
         plot_news_impact_curve(self.beta, self.model, self.quantile, VaR, self.G)
         

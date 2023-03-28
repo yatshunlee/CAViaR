@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-def numeric_fit(returns, model, quantile, caviar, obj, tol):
+def numeric_fit(returns, model, quantile, caviar, obj, tol, VaR0):
     """
     following Engle & Manganelli (2004) approach
     :param: returns (np.array): a series of returns
@@ -14,11 +14,13 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol):
     :param: obj (callable): RQ criterion
     :param: quantile (float): a value between 0 and 1
     :param: tol (float): a very small positive number. Default is 1e-10
+    :param: VaR0 (float): initial estimate of VaR_0
+    :returns: estimated beta
     """
     # compute the daily returns as 100 times the difference of the log of the prices.
     returns = np.array(returns)
     
-    initial_betas = initialize_betas(returns, model, caviar, obj, quantile)
+    initial_betas = initialize_betas(returns, model, caviar, obj, quantile, VaR0)
     result = []
     
     # print('Optimizing by simplex method and quasi-newton method...')
@@ -26,7 +28,7 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol):
     
     for m, initial_beta in enumerate(initial_betas):
         print(f'when m = {m+1}')
-        beta, loss = optimize(initial_beta, returns, quantile, obj, caviar, tol)
+        beta, loss = optimize(initial_beta, returns, quantile, obj, caviar, tol, VaR0)
         result.append(
             {
                 'beta': beta,
@@ -38,7 +40,7 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol):
     return result[0]['beta']
 
 
-def initialize_betas(returns, model, caviar, obj, quantile):
+def initialize_betas(returns, model, caviar, obj, quantile, VaR0):
     """
     :param: returns (np.array): a series of returns
     :param: model (str): a type of CAViaR models
@@ -85,7 +87,7 @@ def initialize_betas(returns, model, caviar, obj, quantile):
 
     # if have time, can try heap instead of sorted list
     for i in range(n):
-        loss = obj(random_betas[i], returns, quantile, caviar)
+        loss = obj(random_betas[i], returns, quantile, caviar, VaR0)
 
         best_initial_betas.append(
             {'loss': loss, 'beta': random_betas[i]}
@@ -101,7 +103,7 @@ def initialize_betas(returns, model, caviar, obj, quantile):
     return best_initial_betas
 
 
-def optimize(initial_beta, returns, quantile, obj, caviar, tol):
+def optimize(initial_beta, returns, quantile, obj, caviar, tol, VaR0):
     current_beta = initial_beta['beta']
     current_loss = initial_beta['loss']
     
@@ -111,7 +113,7 @@ def optimize(initial_beta, returns, quantile, obj, caviar, tol):
     bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
     while True:
         # Minimize the function directly
-        res = minimize(obj, current_beta, args=(returns, quantile, caviar), bounds=bounds)
+        res = minimize(obj, current_beta, args=(returns, quantile, caviar, VaR0), bounds=bounds, method='SLSQP')
         current_beta = res.x
 
         loss = res.fun

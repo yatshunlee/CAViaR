@@ -5,13 +5,14 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-def mle_fit(returns, model, quantile, caviar):
+def mle_fit(returns, model, quantile, caviar, VaR0, G):
     """
     :param: returns (array): a series of daily returns
     :param: model (str): Type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}.
     :param: quantile (float): a value between 0 and 1
     :param: caviar (callable function): a CAViaR function that returns VaR
-    :returns: optimized beta
+    :param: VaR0 (float): initial estimate of VaR_0
+    :returns: estimated beta
     """
     # compute the daily returns as 100 times the difference of the log of the prices.
     returns = np.array(returns)
@@ -21,12 +22,12 @@ def mle_fit(returns, model, quantile, caviar):
     count = 0
     while True:
         result = minimize(neg_log_likelihood, params,
-                          args=(returns, quantile, caviar), bounds=bounds)
+                          args=(returns, quantile, caviar, VaR0), bounds=bounds)
         if result.success:
             break
-        if count >= 5:
+        if count >= 10:
             # generate new starting point again
-            print('Fail to converge after 5 times. Start with new param again.')
+            print('Fail to converge after 10 times. Start with new param again.')
             params, bounds = initiate_params(model)
             count = 0
             # raise ConvergenceError('Fail to converge after 5 times. Try numerical approach.')
@@ -70,7 +71,7 @@ def initiate_params(model):
     return params, bounds
 
 
-def neg_log_likelihood(params, returns, quantile, caviar):
+def neg_log_likelihood(params, returns, quantile, caviar, VaR0):
     """
     :param: params (array): a series of tau and coefficients
     :param: returns (array): a series of daily returns
@@ -83,7 +84,7 @@ def neg_log_likelihood(params, returns, quantile, caviar):
     tau = params[0]
     beta = params[1:]
 
-    VaR = caviar(returns, beta, quantile)
+    VaR = caviar(returns, beta, quantile, VaR0)
 
     llh = (1 - T) * np.log(tau)
     for t in range(1, T):
