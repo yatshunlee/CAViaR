@@ -2,11 +2,13 @@
 # Copyright (c) 2023 Lee Yat Shun, Jasper. All rights reserved.
 
 import numpy as np
+import pandas as pd
 from ._numeric import numeric_fit
 from ._frequentist import mle_fit
 from ._caviar_function import adaptive, symmetric_abs_val, asymmetric_slope, igarch
 from ._dq_test import compute_se_pval, variance_covariance, dq_test
 from ._utils import plot_caviar, plot_news_impact_curve
+from ._exceptions import InputSizeError, NotFittedError
 from scipy.stats import norm
 from time import time
 
@@ -26,6 +28,9 @@ class CaviarModel:
         :param: tol (float): Tolerance level for optimization. Default is 1e-10.
         :param: LAGS (int): Default is 4.
         """
+        if G != 10:
+            raise ValueError('Currently only support G = 10')
+        
         self.beta = None
         self.p = None
         self.caviar = None
@@ -75,14 +80,15 @@ class CaviarModel:
     def obj(self, beta, returns, quantile, caviar, VaR0):
         """
         :param: beta (array-like): parameters of CAVIAR function
-        :param: returns (array-like): a series of returns
+        :param: returns (array-like): a series of returns from day 0 to T
         :param: quantile (float): a value between 0 and 1
         :param: caviar (callable function): a CAVIAR function
         :return: quantile regression loss
         """
-        VaR = caviar(returns, beta, quantile, VaR0, self.G)
-        residuals = returns - VaR
-        hit = self.quantile - (returns < VaR)
+        # VaR from day 0 to T+1
+        VaRs = caviar(returns, beta, quantile, VaR0, self.G)
+        residuals = returns - VaRs[:-1]
+        hit = self.quantile - (returns < VaRs[:-1])
         T = len(returns)
         return residuals @ hit / T
 
@@ -90,6 +96,9 @@ class CaviarModel:
         """
         :param: returns (array-like): a series of returns (100x)
         """
+        if len(returns) < 300:
+            raise InputSizeError('The size of return array must not be less than 300.')
+        
         returns = np.array(returns)
         # starting point VaR_0 = unconditional sampling quantile
         self.VaR0_in = self.get_empirical_quantile(returns, self.quantile)
@@ -136,7 +145,7 @@ class CaviarModel:
         self.VaR0_out = VaRs[-1]
         
         self.vc_matrix, self.D, self.gradient = variance_covariance(
-            self.beta, self.model, T, returns, self.quantile, VaRs, self.G
+            self.beta, self.model, T, returns, self.quantile, VaRs[:-1], self.G
         )
         
         # To compute the standard errors of betas as well as the p values
@@ -144,42 +153,70 @@ class CaviarModel:
         
         print(f'Time taken(s): {time() - s:.2f}')
         
+    def summary(self):
+        """
+        showing the pvalue and standard error of beta
+        """
+        if self.beta is None:
+            msg = ('This CaviarModel instance is not fitted yet. '
+                   'Call "fit" with appropriate arguments before using this estimator.')
+            raise NotFittedError(msg)
+            
+        beta_df = pd.DataFrame({
+            'coefficient': self.beta,
+            'S.E. of beta': self.beta_standard_errors,
+            'pval of beta': self.beta_pvals
+        })
+
+        beta_df.index = [f'beta{i+1}' for i in range(len(self.beta))]
+        return beta_df
+        
     def predict(self, returns, VaR0=None):
         """
         :param: returns (array-like): a series of returns
         :param: VaR0 (float): Initial VaR0. Default is the VaR0 (out-of-samples)
         """
+        if self.beta is None:
+            msg = ('This CaviarModel instance is not fitted yet. '
+                   'Call "fit" with appropriate arguments before using this estimator.')
+            raise NotFittedError(msg)
+            
         if VaR0 is None:
             VaR0 = self.VaR0_out
         returns = np.array(returns)
         VaRs = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
         return VaRs
     
-    def forecast(self, return_ytd, VaR_ytd):
-        """
-        predict today's VaR (unknown)
-        :param: return_ytd (float): return yesterday
-        :param: VaR_ytd (float): VaR yesterday
-        :returns: VaR forecast today
-        """
-        if self.model == 'adaptive':
-            b1 = self.beta[0]
-            return VaR_ytd + b1 * (
-                1 / (1 + np.exp(self.G * (return_ytd - VaR_ytd))) - self.quantile
-            )
+#     def forecast(self, return_ytd, VaR_ytd):
+#         """
+#         predict today's VaR (unknown)
+#         :param: return_ytd (float): return yesterday
+#         :param: VaR_ytd (float): VaR yesterday
+#         :returns: VaR forecast today
+#         """
+#         if self.beta is None:
+#             msg = ('This CaviarModel instance is not fitted yet. '
+#                    'Call "fit" with appropriate arguments before using this estimator.')
+#             raise NotFittedError(msg)
+            
+#         if self.model == 'adaptive':
+#             b1 = self.beta[0]
+#             return VaR_ytd + b1 * (
+#                 1 / (1 + np.exp(self.G * (return_ytd - VaR_ytd))) - self.quantile
+#             )
         
-        elif self.model == 'symmetric':
-            b1, b2, b3 = self.beta
-            return b1 + b2 * VaR_ytd + b3 * abs(return_ytd)
+#         elif self.model == 'symmetric':
+#             b1, b2, b3 = self.beta
+#             return b1 + b2 * VaR_ytd + b3 * abs(return_ytd)
         
-        elif self.model == 'asymmetric':
-            b1, b2, b3, b4 = self.beta
-            return b1 + b2 * VaR_ytd + b3 * max(return_ytd, 0) + b4 * min(return_ytd, 0)
+#         elif self.model == 'asymmetric':
+#             b1, b2, b3, b4 = self.beta
+#             return b1 + b2 * VaR_ytd + b3 * max(return_ytd, 0) + b4 * min(return_ytd, 0)
         
-        else:  # IGARCH
-            b1, b2, b3 = self.beta
-            VaR = (b1 + b2 * VaR_ytd ** 2 + b3 * return_ytd ** 2) ** 0.5
-            return - VaR
+#         else:  # IGARCH
+#             b1, b2, b3 = self.beta
+#             VaR = (b1 + b2 * VaR_ytd ** 2 + b3 * return_ytd ** 2) ** 0.5
+#             return - VaR
         
     def dq_test(self, returns, test_mode):
         """
@@ -188,9 +225,9 @@ class CaviarModel:
         """
         VaRs = self.predict(returns)
         if test_mode == 'in':
-            return dq_test(True, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
+            return dq_test(True, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.LAGS)
         elif test_mode == 'out':
-            return dq_test(False, self.model, returns, self.quantile, VaRs, self.D, self.gradient, self.LAGS)
+            return dq_test(False, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.LAGS)
         else:
             raise ValueError('Test mode must be one of {"in", "out"}')
     
@@ -199,6 +236,11 @@ class CaviarModel:
         plot the positive VaR and the violations in the fitting process
         :param: returns (array-like):
         """
+        if self.beta is None:
+            msg = ('This CaviarModel instance is not fitted yet. '
+                   'Call "fit" with appropriate arguments before using this estimator.')
+            raise NotFittedError(msg)
+            
         if mode == 'in':
             VaR0 = self.VaR0_in
         elif mode == 'out':
@@ -211,8 +253,8 @@ class CaviarModel:
         except:
             x_axis = None
         returns = np.array(returns)
-        VaR = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
-        plot_caviar(returns, VaR, self.quantile, self.model, x_axis)
+        VaRs = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
+        plot_caviar(returns, VaRs[:-1], self.quantile, self.model, x_axis)
         
     def plot_news_impact_curve(self, VaR=-1.645):
         """
@@ -220,5 +262,10 @@ class CaviarModel:
         by fixing the VaR_t-1
         where news = return
         """
+        if self.beta is None:
+            msg = ('This CaviarModel instance is not fitted yet. '
+                   'Call "fit" with appropriate arguments before using this estimator.')
+            raise NotFittedError(msg)
+            
         plot_news_impact_curve(self.beta, self.model, self.quantile, VaR, self.G)
         
