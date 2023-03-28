@@ -41,7 +41,7 @@ def traffic_light_test(returns, VaRs, quantile, num_obs=250, baseline=3):
     """
     num_violations = np.sum(returns[-num_obs:] < VaRs[-num_obs:])
     
-    z_assumed = norm.ppf(var_level)
+    z_assumed = norm.ppf(quantile)
     z_observed = norm.ppf(num_violations / num_obs)
     p = binom.cdf(num_violations, num_obs, quantile)
     
