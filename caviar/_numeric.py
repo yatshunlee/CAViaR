@@ -28,7 +28,7 @@ def numeric_fit(returns, model, quantile, caviar, obj, tol, VaR0):
     
     for m, initial_beta in enumerate(initial_betas):
         print(f'when m = {m+1}')
-        beta, loss = optimize(initial_beta, returns, quantile, obj, caviar, tol, VaR0)
+        beta, loss = optimize(initial_beta, returns, model, quantile, obj, caviar, tol, VaR0)
         result.append(
             {
                 'beta': beta,
@@ -97,38 +97,39 @@ def initialize_betas(returns, model, caviar, obj, quantile, VaR0):
 
         if len(best_initial_betas) == m+1:
             best_initial_betas.pop()
-        
-#         break # might delete later
 
     return best_initial_betas
 
 
-def optimize(initial_beta, returns, quantile, obj, caviar, tol, VaR0):
+def optimize(initial_beta, returns, model, quantile, obj, caviar, tol, VaR0):
+    """
+    
+    """
     current_beta = initial_beta['beta']
     current_loss = initial_beta['loss']
+    
+    if model == 'igarch':
+        bounds = [(1e-10, None)] + [(1e-10, 1) for _ in range(len(current_beta)-1)]
+    else:
+        bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
     
     count = 0
     print(f'Update {count}:', current_loss)
     
-    bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
     while True:
-        # Minimize the function directly
-        res = minimize(obj, current_beta, args=(returns, quantile, caviar, VaR0), bounds=bounds, method='SLSQP')
+        # Minimize the function directly using the L-BFGS-B algorithm
+        res = minimize(obj, current_beta, args=(returns, quantile, caviar, VaR0), bounds=bounds, method='L-BFGS-B')
         current_beta = res.x
 
         loss = res.fun
         
-        if count >= 5:
-            print('Fail for the initialized beta. Skip.')
-            break
-        
         count += 1   
         print(f'Update {count}:',loss)
         
-        if current_loss - loss < tol:
+        if current_loss - loss < tol or count >= 5:
             break
-        else:
-            current_loss = loss
+        
+        current_loss = loss
             
 #         # Minimize the function using the Nelder-Mead algorithm
 #         res = minimize(obj, current_beta, args=(returns, quantile, caviar), method='Nelder-Mead', bounds=bounds)

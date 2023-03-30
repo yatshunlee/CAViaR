@@ -2,6 +2,7 @@
 .idea/
 data/
 papers/
+author/
 __pycache__/
 .ipynb_checkpoints/
 chatgpt.docx

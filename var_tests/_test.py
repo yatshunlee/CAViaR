@@ -46,7 +46,7 @@ def traffic_light_test(returns, VaRs, quantile, num_obs=250, baseline=3):
     p = binom.cdf(num_violations, num_obs, quantile)
     
     tl = 'green' if p <= 0.95 else 'yellow' if p <= 0.9999 else 'red'
-    scale_factor = baseline * (z_ass/z_obs - 1) if tl == 'yellow' else 0 if tl == 'green' else 1
+    scale_factor = baseline * (z_assumed/z_observed - 1) if tl == 'yellow' else 0 if tl == 'green' else 1
     
     return tl, p, scale_factor
 

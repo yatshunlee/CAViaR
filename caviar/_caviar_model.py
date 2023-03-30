@@ -11,10 +11,11 @@ from ._utils import plot_caviar, plot_news_impact_curve
 from ._exceptions import InputSizeError, NotFittedError
 from scipy.stats import norm
 from time import time
+import warnings
 
 
 class CaviarModel:
-    def __init__(self, quantile=0.05, model='symmetric', method='numeric', G=10, tol=1e-10, LAGS=4):
+    def __init__(self, quantile=0.05, model='symmetric', method='numeric', G=10, tol=1e-10, LAGS=4, verbose=False):
         """
         CaviarModel is a class for estimating Conditional Autoregressive Value at Risk (CAViaR) models.
         
@@ -27,6 +28,7 @@ class CaviarModel:
         :param: G (int): Smoothen version of the indicator function. Some positive number. Default is 10.
         :param: tol (float): Tolerance level for optimization. Default is 1e-10.
         :param: LAGS (int): Default is 4.
+        :param: verbose (bool): Default is False.
         """
         if G != 10:
             raise ValueError('Currently only support G = 10')
@@ -61,6 +63,8 @@ class CaviarModel:
             raise ValueError(
                 'Method must be one of {"numeric (Engle & Manganelli, 2004)", "mle (Maximum Likelihood Estimation)"}'
             )
+        
+        self.verbose = verbose
             
     def __repr__(self):
         return (f"CaviarModel(quantile={self.quantile}, model={self.model}, "
@@ -100,6 +104,9 @@ class CaviarModel:
             raise InputSizeError('The size of return array must not be less than 300.')
         
         returns = np.array(returns)
+        if np.max(abs(returns)) < 1:
+            warnings.warn("The maximum absolute value is less than 1. Remember that the log return has to be multiplied by 100 before fitting")
+        
         # starting point VaR_0 = unconditional sampling quantile
         self.VaR0_in = self.get_empirical_quantile(returns, self.quantile)
         
@@ -133,11 +140,13 @@ class CaviarModel:
                                 self.G)
         
         # print statistics
-        print('Final loss:', self.obj(self.beta,
+        self.training_loss = self.obj(self.beta,
                                       returns,
                                       self.quantile,
                                       self.caviar,
-                                      self.VaR0_in))
+                                      self.VaR0_in)
+                                      
+        print('Final loss:', self.training_loss)
         
         # To compute the variance and covariance matrix
         T = len(returns)
@@ -153,9 +162,10 @@ class CaviarModel:
         
         print(f'Time taken(s): {time() - s:.2f}')
         
-    def summary(self):
+    def beta_summary(self):
         """
         showing the pvalue and standard error of beta
+        :returns: statistics of beta (pd.DataFrame)
         """
         if self.beta is None:
             msg = ('This CaviarModel instance is not fitted yet. '
@@ -175,6 +185,7 @@ class CaviarModel:
         """
         :param: returns (array-like): a series of returns
         :param: VaR0 (float): Initial VaR0. Default is the VaR0 (out-of-samples)
+        :returns: negative VaRs (array-like): including the predicted realization and forecast
         """
         if self.beta is None:
             msg = ('This CaviarModel instance is not fitted yet. '
@@ -186,42 +197,12 @@ class CaviarModel:
         returns = np.array(returns)
         VaRs = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
         return VaRs
-    
-#     def forecast(self, return_ytd, VaR_ytd):
-#         """
-#         predict today's VaR (unknown)
-#         :param: return_ytd (float): return yesterday
-#         :param: VaR_ytd (float): VaR yesterday
-#         :returns: VaR forecast today
-#         """
-#         if self.beta is None:
-#             msg = ('This CaviarModel instance is not fitted yet. '
-#                    'Call "fit" with appropriate arguments before using this estimator.')
-#             raise NotFittedError(msg)
-            
-#         if self.model == 'adaptive':
-#             b1 = self.beta[0]
-#             return VaR_ytd + b1 * (
-#                 1 / (1 + np.exp(self.G * (return_ytd - VaR_ytd))) - self.quantile
-#             )
-        
-#         elif self.model == 'symmetric':
-#             b1, b2, b3 = self.beta
-#             return b1 + b2 * VaR_ytd + b3 * abs(return_ytd)
-        
-#         elif self.model == 'asymmetric':
-#             b1, b2, b3, b4 = self.beta
-#             return b1 + b2 * VaR_ytd + b3 * max(return_ytd, 0) + b4 * min(return_ytd, 0)
-        
-#         else:  # IGARCH
-#             b1, b2, b3 = self.beta
-#             VaR = (b1 + b2 * VaR_ytd ** 2 + b3 * return_ytd ** 2) ** 0.5
-#             return - VaR
         
     def dq_test(self, returns, test_mode):
         """
-        :param: returns (array-like):
+        :param: returns (array-like): a series of returns
         :param: test_mode (str): either 'in' or 'out' => 'in samples' or 'out of samples'
+        :returns: dq_test (callable): which gives the p-value of Dynamic Quantile test.
         """
         VaRs = self.predict(returns)
         if test_mode == 'in':

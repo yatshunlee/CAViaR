@@ -18,19 +18,25 @@ def mle_fit(returns, model, quantile, caviar, VaR0, G):
     returns = np.array(returns)
     
     params, bounds = initiate_params(model)
-
+    
+    count = 0
     while True:
+        # scipy optimize default for bounds: method=L-BFGS-B
         result = minimize(neg_log_likelihood, params,
                           args=(returns, quantile, caviar, VaR0), bounds=bounds)
+        
+        count += 1
         
         if np.isnan(result.fun):
             # generate new starting point again
             params, bounds = initiate_params(model)
+            count = 0
+            continue
             
-        if result.success:
+        if result.success or count >= 5:
             break
-        else:
-            params = result.x
+        
+        params = result.x
         
     
     params = result.x
@@ -49,19 +55,18 @@ def initiate_params(model):
     :param: model (str): Type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}.
     :returns: parameters, corresponding bounds for the parameters
     """
-    # bounds for tau, intercept
-    bounds = [(1e-10, None), (-1, 1)] # for tau, b0
     if model == 'igarch':
-        bounds += [(-1, 1), (-1, 1)] # for b1, b2
+        bounds = [(1e-10, None), (1e-10, None), (1e-10, 1), (1e-10, 1)] # for tau, b0, b1, b2
     elif model == 'symmetric':
         # b1 for lagged var, b2 for abs(lagged return)
-        bounds += [(-1, 1), (-1, 1)] # for b1, b2
+        bounds = [(1e-10, None), (None, None), (-1, 1), (-1, 1)] # for tau, b0, b1, b2
     elif model == 'asymmetric':
-        # notice that the boundaries are required to keep in 0, 1. Any reason?
         # b1 for lagged var, b2 for (lagged return)^+, b3 for (lagged return)^-
-        bounds += [(-1, 1), (-1, 1), (-1, 1)] # for b1, b2, b3
-    else:  # adaptive
-        pass
+        bounds = [(1e-10, None), (None, None), (-1, 1), (-1, 1), (-1, 1)] # for tau, b0, b1, b2, b3
+    elif model == 'adaptive':
+        bounds = [(1e-10, None), (None, None)] # for tau, b0
+    else:
+        raise ValueError('Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}')
 
     # number of parameters
     p = len(bounds)
