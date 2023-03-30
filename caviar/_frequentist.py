@@ -18,21 +18,20 @@ def mle_fit(returns, model, quantile, caviar, VaR0, G):
     returns = np.array(returns)
     
     params, bounds = initiate_params(model)
-    
-    count = 0
+
     while True:
         result = minimize(neg_log_likelihood, params,
                           args=(returns, quantile, caviar, VaR0), bounds=bounds)
-        print(f'Update {count + 1}:', result.fun)
+        
+        if np.isnan(result.fun):
+            # generate new starting point again
+            params, bounds = initiate_params(model)
+            
         if result.success:
             break
-        if count >= 10:
-            # generate new starting point again
-            print('Fail to converge after 10 times. Start with new param again.')
-            params, bounds = initiate_params(model)
-            count = 0
-            # raise ConvergenceError('Fail to converge after 5 times. Try numerical approach.')
-        count += 1
+        else:
+            params = result.x
+        
     
     params = result.x
     tau = params[0]
