@@ -6,6 +6,8 @@ import pandas as pd
 from scipy.stats import chi2, binom_test, binom, norm
 
 
+hit_rate = lambda ret, var: np.mean(ret < var)
+
 def binomial_test(returns, VaRs, quantile):
     """
     null hypothesis: the probability of success/failure in a Bernoulli experiment is p.

@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def plot_caviar(returns, VaR, quantile, model, x_axis=None):
     if x_axis is not None:
         x_lbl = 'date'
@@ -29,7 +30,8 @@ def plot_caviar(returns, VaR, quantile, model, x_axis=None):
     axes[1].set_ylabel(f'Return (%)')
     axes[1].legend()
     
-    plt.show()
+    return fig
+    
     
 def plot_news_impact_curve(beta, model, quantile, VaR, G):
     y = np.linspace(-10, 10, 100)
@@ -51,10 +53,11 @@ def plot_news_impact_curve(beta, model, quantile, VaR, G):
     else:
         raise ValueError('Wrong model')
     
-    plt.figure(figsize=(8, 6))
-    plt.plot(y, impact)
-    plt.xlabel('y_t-1')
-    plt.ylabel('VaR_t')
-    plt.title(f'{int(quantile*100)}% CAViaR News Impact Curve')
-    plt.ylim([0, 10])
-    plt.show()
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+    ax.plot(y, impact)
+    ax.set_xlabel('y_t-1')
+    ax.set_ylabel('VaR_t')
+    ax.set_title(f'{int(quantile*100)}% CAViaR News Impact Curve')
+    ax.set_ylim([0, 10])
+    
+    return fig
