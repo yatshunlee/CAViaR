@@ -149,12 +149,12 @@ class CaviarModel:
         print('Final loss:', self.training_loss)
         
         # To compute the variance and covariance matrix
-        T = len(returns)
+        self.T = len(returns)
         VaRs = self.predict(returns, self.VaR0_in)
         self.VaR0_out = VaRs[-1]
         
         self.vc_matrix, self.D, self.gradient = variance_covariance(
-            self.beta, self.model, T, returns, self.quantile, VaRs[:-1], self.G
+            self.beta, self.model, self.T, returns, self.quantile, VaRs[:-1], self.G
         )
         
         # To compute the standard errors of betas as well as the p values
@@ -204,11 +204,16 @@ class CaviarModel:
         :param: test_mode (str): either 'in' or 'out' => 'in samples' or 'out of samples'
         :returns: dq_test (callable): which gives the p-value of Dynamic Quantile test.
         """
+        if self.beta is None:
+            msg = ('This CaviarModel instance is not fitted yet. '
+                   'Call "fit" with appropriate arguments before using this estimator.')
+            raise NotFittedError(msg)
+            
         VaRs = self.predict(returns)
         if test_mode == 'in':
-            return dq_test(True, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.LAGS)
+            return dq_test(True, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.T, self.LAGS)
         elif test_mode == 'out':
-            return dq_test(False, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.LAGS)
+            return dq_test(False, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.T, self.LAGS)
         else:
             raise ValueError('Test mode must be one of {"in", "out"}')
     

@@ -19,7 +19,7 @@ def hit_func(returns, VaRs, quantile):
     """
     return (returns < VaRs) - quantile
 
-def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, LAGS=4):
+def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, in_T, LAGS=4):
     """
     Use Manganelli's matlab code as a reference
     
@@ -30,6 +30,8 @@ def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, LAGS=4)
     :param: VaRs (np.array):
     :param: D (np.array): matrix
     :param: gradient (np.array): gradient vector for out-of-sample mode
+    :param: in_T (int). Default is the size of training samples based on Rubia, A., & Sanchis-Marco, L. (2013)
+    :param: LAGS (int). Default is 4.
     """
     T = len(returns)
     returns = np.array(returns)
@@ -40,7 +42,10 @@ def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, LAGS=4)
 
     # Set up the bandwidth for the KNN algorithm
     sorted_result = np.sort(abs(residuals))
-    k = 40 if quantile == 0.01 else 60
+    # k = 40 if quantile == 0.01 else 60
+    # following this approach:
+    # Rubia, A., & Sanchis-Marco, L. (2013). On downside risk predictability through liquidity and trading activity: A dynamic quantile approach
+    k = int(np.sqrt(in_T))
     bandwidth = sorted_result[k]
     
     constant = np.ones(T - LAGS)
@@ -97,9 +102,12 @@ def variance_covariance(beta, model, T, returns, quantile, VaRs, G):
     # Compute the quantile residuals
     residuals = returns - VaRs
     
-    # Set up the bandwidth for the KNN algorithm
+    # Set up the bandwidth for the KNN algorithm by Engle and  Manganelli (2004)
     sorted_result = np.sort(abs(residuals))
-    k = 40 if quantile == 0.01 else 60
+    # k = 40 if quantile == 0.01 else 60
+    # following this approach:
+    # Rubia, A., & Sanchis-Marco, L. (2013). On downside risk predictability through liquidity and trading activity: A dynamic quantile approach
+    k = int(np.sqrt(T))
     bandwidth = sorted_result[k]
     t = 0
     
