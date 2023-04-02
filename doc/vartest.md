@@ -1,5 +1,5 @@
 ## Summary
-To evaluate the performance and accuracy of VaR models, backtesting is often used. Backtesting is a statistical method of comparing the actual losses of an investment or portfolio with the predicted VaR estimates. The objective of backtesting is to determine whether the VaR model is reliable and accurate in predicting the actual losses in different market conditions.
+The objective is to determine whether the VaR model is reliable and accurate in predicting the actual losses in different market conditions, by statistically measuring comparing the actual losses of an investment or portfolio with the predicted VaR estimates.
 
 This library consists of:
 - Binomial test
