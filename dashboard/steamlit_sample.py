@@ -39,30 +39,25 @@ obs_day = end_date - timedelta(days=252*2)
 forecast_day = obs_day + timedelta(days=1)
 data = yf.download(ticker, start=start_date, end=end_date)
 returns = data['Adj Close'].pct_change().dropna()
+returns = returns.apply(lambda x: x*100)
 
 option = st.selectbox("CARViar model",("adaptive", "symmetric", "asymmetric", "igarch"))
 method = ['mle', 'numeric']
 quantile = 0.05
 
 caviar = CaviarModel(quantile, model=option, method=method[0])
+
 caviar.fit(returns.loc[:obs_day])
 c_VaRs = caviar.predict(returns.loc[forecast_day:], caviar.VaR0_out)
-current_VaRs = round(c_VaRs[-1]*100,4)
-previous_VaRs = round(c_VaRs[-2]*100,4)
-st.metric(label="Current_VaRs", value=current_VaRs, delta= previous_VaRs - current_VaRs, delta_color='inverse')
-
-#download and plot chart
-
-#st.metric("VaR:", VaR_indicator[:-1])
-fig = px.line(data, x=data.index, y=data['Adj Close'], title=ticker)
-#fig.add_scatter(x=data.index, y=c_VaRs[:-1], title="5% quantile")
-st.plotly_chart(fig)
+current_CVaRs = round(c_VaRs[-1],4)
+previous_CVaRs = round(c_VaRs[-2],4)
+st.metric(label="Current_VaRs_CARViar", value=current_CVaRs, delta= round(previous_CVaRs - current_CVaRs,4), delta_color='inverse')
 
 #GARCH model
 result = []
 for i in range(1,3):
   for j in range(1,3):
-    am = arch_model(returns*100, vol='Garch', mean="Zero", p=i, q=j)
+    am = arch_model(returns, vol='Garch', mean="Zero", p=i, q=j)
     res = am.fit(disp='off', last_obs=obs_day)
     result.append({'mod':res, 'aic':res.aic})
 
@@ -76,6 +71,16 @@ q = am.distribution.ppf([0.01, 0.05])
 value_at_risk = np.sqrt(cond_var).values*q[None,:]
 value_at_risk = pd.DataFrame(value_at_risk, columns=['1%','5%'],index=cond_var.index)
 VaRs = value_at_risk['5%']
+current_GVaRs = round(VaRs[-1],4)
+previous_GVaRs = round(VaRs[-2],4)
+st.metric(label="Current_VaRs_GARCH", value=current_GVaRs, delta= round(previous_GVaRs - current_GVaRs,4), delta_color='inverse')
+
+#download and plot chart
+
+#st.metric("VaR:", VaR_indicator[:-1])
+fig = px.line(data, x=data.index, y=data['Adj Close'], title=ticker)
+#fig.add_scatter(x=data.index, y=c_VaRs[:-1], title="5% quantile")
+st.plotly_chart(fig)
 
 #run test to ensure model significant
 b = binomial_test(returns.loc[forecast_day:], VaRs, quantile)
@@ -85,23 +90,25 @@ c = christoffersen_test(returns.loc[forecast_day:], VaRs)
 
 st.header("Test for GARCH")
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("binomial", b)
+col1.metric("binomial", round(b,4))
 col2.metric("traffic_light", t)
 col3.metric("kupiec", k)
-col4.metric("christoffersen", c)
+col4.metric("christoffersen", round(c,4))
 
 #run test to ensure model significant
 bi = binomial_test(returns.loc[forecast_day:], c_VaRs[:-1], caviar.quantile)
 dq = caviar.dq_test(returns.loc[forecast_day:], 'out')
 ku = kupiec_pof_test(returns.loc[forecast_day:], c_VaRs[:-1], caviar.quantile)
 ch = christoffersen_test(returns.loc[forecast_day:], c_VaRs[:-1])
+tr, _, _ = traffic_light_test(returns.loc[forecast_day:], c_VaRs[:-1], caviar.quantile, num_obs=250, baseline=3)
 
 st.header("Test for CARViaR")
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("binomial", bi)
-col2.metric("DQ test", dq)
-col3.metric("kupiec", ku)
-col4.metric("christoffersen", ch)
+col1, col2, col3, col4, col5 = st.columns(5)
+col1.metric("DQ test", round(dq,4))
+col2.metric("binomial", round(bi,4))
+col3.metric("traffic light", tr)
+col4.metric("kupiec", ku)
+col5.metric("christoffersen", round(ch,4))
 
 #select CAViaR model by p-value
 #c_beta_p = caviar.beta_pvals
@@ -138,7 +145,7 @@ with news:
     st.write(f'News Sentiment {news_sentiment}')
 
 with fundamental_data:
-  key = ""  #get a key here: https://www.alphavantage.co/support/#api-key
+  key = "43OTW409OLX93FWD"  #get a key here: https://www.alphavantage.co/support/#api-key #43OTW409OLX93FWD
   fd = FundamentalData(key, output_format = "pandas")
   st.subheader("Balance Sheet")
   balance_sheet = fd.get_balance_sheet_annual(ticker)[0]
