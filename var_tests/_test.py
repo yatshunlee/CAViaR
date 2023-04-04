@@ -66,7 +66,8 @@ def kupiec_pof_test(returns, VaRs, quantile):
     :param: quantile (float):
     :returns: pvalue
     """
-    p = 1 - quantile
+    # p = 1 - VaR level, where (quantile = 0.05) == (VaR_level = 0.95)
+    p = quantile
     x = np.array(returns < VaRs).sum()
     N = len(returns)
     
