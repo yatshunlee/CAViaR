@@ -109,4 +109,16 @@ def christoffersen_test(returns, VaRs):
     numerator = (1 - pi) ** (n00 + n10) * pi ** (n01 + n11)
     denominator = (1 - pi0) ** n00 * pi0 ** n01 * (1 - pi1) ** n10 * pi1 ** n11
     LR_CCI = -2 * np.log(numerator / denominator)
+    
+#     numerator_1 = (1 - pi) ** (n00 + n10)
+#     numerator_2 = pi ** (n01 + n11)
+#     denominator_1 = (1 - pi0) ** n00
+#     denominator_2 = pi0 ** n01
+#     denominator_3 = (1 - pi1) ** n10
+#     denominator_4 = pi1 ** n11
+#     LR_CCI = -2 * np.log(
+#         (numerator_1 / denominator_1 / denominator_2) *
+#         (numerator_2 / denominator_3 / denominator_4)
+#     )
+    
     return chi2.cdf(LR_CCI, df=1)
