@@ -77,7 +77,7 @@ def initialize_betas(returns, model, caviar, obj, quantile, VaR0):
         p = 3
     
     # for faster version
-    n = 5000
+    n = 1000
     m = 5
     
     print(f'Generating {m} best initial betas out of {n}...')
@@ -112,6 +112,8 @@ def optimize(initial_beta, returns, model, quantile, obj, caviar, tol, VaR0):
         bounds = [(1e-10, None)] + [(1e-10, 1) for _ in range(len(current_beta)-1)]
     else:
         bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
+        
+    bounds = [(None, None) for _ in range(len(current_beta))] # try with no bound
     
     count = 0
     print(f'Update {count}:', current_loss)

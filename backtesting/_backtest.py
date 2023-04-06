@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=0.002):
+def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=0.002, ticker=None):
     """
     replace the return over q%-quantile VaR from day 1 to day T
     
@@ -41,9 +41,11 @@ def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=
     new = new * ((backtest_df['low/open'] < backtest_df['VaR']) * -penalty + 1)
     
     # some statistics
+    print(sharpe_ratio(new-1))
     stat1 = annualized_return(new-1)
     stat2 = cumulative_return(new-1)
     stat3 = maximum_drawdown(new-1)
+    print(sharpe_ratio(returns/100))
     stat4 = annualized_return(returns/100)
     stat5 = cumulative_return(returns/100)
     stat6 = maximum_drawdown(returns/100)
@@ -52,7 +54,10 @@ def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=
     plt.figure(figsize=(8, 6))
     plt.plot(date, original, label='original')
     plt.plot(date, new, label=f'with {int(quantile*100)}% risk control')
-    plt.title('Cummulative Return Plot')
+    if ticker is None:
+        plt.title('Cummulative Return Plot')
+    else:
+        plt.title(f'Cummulative Return Plot - {ticker}')
     plt.legend()
     plt.yscale('log')
     plt.show()
@@ -74,6 +79,23 @@ def annualized_return(returns, periods_per_year=252):
     geometric_mean = np.prod(returns) ** (1 / len(returns))
     annualized_return = (geometric_mean ** periods_per_year) - 1
     return annualized_return
+
+def sharpe_ratio(returns, risk_free_rate=0):
+    """
+    Calculates the Sharpe ratio of a portfolio given its returns and the risk-free rate.
+
+    Parameters:
+    returns (numpy.ndarray or list): An array of returns for the portfolio.
+    risk_free_rate (float): The risk-free rate of return.
+
+    Returns:
+    float: The Sharpe ratio of the portfolio.
+    """
+    excess_returns = np.array(returns) - risk_free_rate
+    mean_excess_returns = np.mean(excess_returns)
+    std_excess_returns = np.std(excess_returns)
+    sharpe = mean_excess_returns / std_excess_returns
+    return sharpe
 
 def cumulative_return(returns):
     """
