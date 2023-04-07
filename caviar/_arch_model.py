@@ -3,7 +3,9 @@ from scipy.optimize import minimize
 
 
 class GarchModel:
-    def __init__(self, p, q):
+    def __init__(self, p, q=0):
+        if q != 0:
+            raise Exception('Currently only support ARCH model. q must be equal to 0.')
         self.p = p
         self.q = q
 

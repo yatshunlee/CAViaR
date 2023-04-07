@@ -3,7 +3,7 @@
 
 import numpy as np
 import pandas as pd
-from ._numeric import numeric_fit
+from ._quantreg import rq_fit
 from ._frequentist import mle_fit
 from ._caviar_function import adaptive, symmetric_abs_val, asymmetric_slope, igarch
 from ._dq_test import compute_se_pval, variance_covariance, dq_test
@@ -15,16 +15,16 @@ import warnings
 
 
 class CaviarModel:
-    def __init__(self, quantile=0.05, model='symmetric', method='numeric', G=10, tol=1e-10, LAGS=4, verbose=False):
+    def __init__(self, quantile=0.05, model='symmetric', method='RQ', G=10, tol=1e-10, LAGS=4, verbose=False):
         """
         CaviarModel is a class for estimating Conditional Autoregressive Value at Risk (CAViaR) models.
         
         :param: quantile (float): Quantile value between 0 and 1 exclusively. Default is 0.05.
         :param: model (str): Type of CAViaR model. Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}.
                              Default is "asymmetric", i.e., asymmetric slope.
-        :param: method (str): Estimation method. Must be one of {"numeric (Engle & Manganelli, 2004)",
+        :param: method (str): Estimation method. Must be one of {"RQ (Engle & Manganelli, 2004)",
                              "mle (Maximum Likelihood Estimation)"}.
-                             Default is "numeric".
+                             Default is "RQ".
         :param: G (int): Smoothen version of the indicator function. Some positive number. Default is 10.
         :param: tol (float): Tolerance level for optimization. Default is 1e-10.
         :param: LAGS (int): Default is 4.
@@ -57,11 +57,11 @@ class CaviarModel:
         else:
             raise ValueError('Model must be one of {"adaptive", "symmetric", "asymmetric", "igarch"}')
 
-        if method in ['numeric', 'mle']:
+        if method in ['RQ', 'mle']:
             self.method = method
         else:
             raise ValueError(
-                'Method must be one of {"numeric (Engle & Manganelli, 2004)", "mle (Maximum Likelihood Estimation)"}'
+                'Method must be one of {"RQ (Engle & Manganelli, 2004)", "mle (Maximum Likelihood Estimation)"}'
             )
         
         self.verbose = verbose
@@ -122,14 +122,14 @@ class CaviarModel:
             self.caviar = igarch
             
         s = time()
-        if self.method == 'numeric':
-            self.beta = numeric_fit(returns,
-                                    self.model,
-                                    self.quantile,
-                                    self.caviar,
-                                    self.obj,
-                                    self.tol,
-                                    self.VaR0_in)
+        if self.method == 'RQ':
+            self.beta = rq_fit(returns,
+                               self.model,
+                               self.quantile,
+                               self.caviar,
+                               self.obj,
+                               self.tol,
+                               self.VaR0_in)
 
         elif self.method == 'mle':
             self.beta = mle_fit(returns, 

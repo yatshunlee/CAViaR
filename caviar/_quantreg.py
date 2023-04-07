@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-def numeric_fit(returns, model, quantile, caviar, obj, tol, VaR0):
+def rq_fit(returns, model, quantile, caviar, obj, tol, VaR0):
     """
     following Engle & Manganelli (2004) approach
     :param: returns (np.array): a series of returns
