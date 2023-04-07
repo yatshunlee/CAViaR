@@ -47,3 +47,5 @@ out_VaR_fitted, out_VaR_forecast = out_VaR_predicted[:-1], out_VaR_predicted[-1]
 print(caviar_model.dq_test(in_samples, 'in'))
 print(caviar_model.dq_test(out_samples, 'out'))
 ```
+
+Notice that since the model is a time series model, when you want to perform out of sample prediction, the in-sample and out-of-sample data must be consecutive. If the in-sample are from 0, 1, ..., T, then the out-of-sample must be starting from T+1, T+2, ...
