@@ -14,6 +14,27 @@ $f_t(\beta) = \beta_{1} + \beta_{2} f_{t-1}(\beta) + \beta_{3} \cdot max(y_{t-1}
 ### IGARCH(1, 1):
 $f_t(\beta) = \sqrt{\beta_{1} + \beta_{2} f_{t-1}^2(\beta) + \beta_{3} y_{t-1}^2}$
 
+## Method
+### RQ Criterion Minimization (RQ):
+$$min_\beta T^{-1} \sum_{t=1}^T [ \theta - I(y_t < f_t(\beta)) ] [y_t - f_t(\beta)]$$
+
+where:
+- $y_t$ is the return at period t (author using log return * 100)
+- $f_t(\beta)$ is the predicted VaR at period t
+- $\theta$ is the quantile level, which ranges from 0 to 1
+
+### Minimizing Negative Log-Likelihood (MLE):
+$$min_{\beta, \tau} Tlog{\tau} + {\tau}^{-1}\sum_{t=1}^T [ \theta - I(y_t < f_t(\beta)) ] [y_t - f_t(\beta)]$$
+
+where:
+- $y_t$ is the return at period t, assumming $y_t$ follows Asymmetric Skewed Laplace Distribution with $\tau$ > 0
+- $f_t(\beta)$ is the predicted VaR at period t
+- $\theta$ is the quantile level, which ranges from 0 to 1
+
+### Optimization Method
+We optimized the problem differently. Instead of best start: picking m best $\beta$ from n random start, we use random start method, m = n = 1, since we have found that best start and random start don't show a huge difference on the loss value and hit rate (in and out of samples) in the experiment of testing their repeatabilities.
+
+Instead of usibg simplex algorithm followed by quasi-newton method, we have used L-BFGS-B to optimize the problems.
 
 ## Example
 ```
@@ -21,10 +42,10 @@ $f_t(\beta) = \sqrt{\beta_{1} + \beta_{2} f_{t-1}^2(\beta) + \beta_{3} y_{t-1}^2
 in_samples = some_returns[in] * 100
 out_samples = some_returns[out] * 100
 
-# initialize the parameters
+# initialize the parameters by choosing from these
 # q = 0 to 1 exclusively
-# model = {'adaptive', 'asymmetric', 'symmetric', 'igarch'}
-# method = {'numeric', 'mle'}
+# model is from {'adaptive', 'asymmetric', 'symmetric', 'igarch'}
+# method is from {'RQ', 'mle'}
 
 # declare a model instance
 caviar_model = CaviarModel(q, model, method)
