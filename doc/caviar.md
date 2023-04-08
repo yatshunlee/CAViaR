@@ -1,7 +1,7 @@
 ## Summary
 In the paper "CAViaR: Conditional Autoregressive Value at Risk by Regression Quantiles" by Robert F. Engle and Simone Manganelli (2004), the authors propose a new method for estimating and evaluating Value-at-Risk (VaR) forecasts. The main idea is to model the quantiles of future returns directly, rather than modeling the entire distribution of returns. The model they propose is called the Conditional Autoregressive Value at Risk (CAViaR) model.
 
-This library `caviar` is designed based on the paper and our additional research on the parameter setting and optimization method.
+This library `caviar` is designed to build the below 4 types of models based on the paper and our additional research on the parameter setting and optimization method.
 
 ## 4 types of CAViaR model in Engle & Manganelli, 2004
 ### Adaptive:
