@@ -1,7 +1,7 @@
 # SDSC6013 Topics in Financial Engineering and Technology Group Project
 Content
-1. CAViaR Model
-2. VaR Test
+1. CAViaR Model `caviar`
+2. VaR Test `var_tests`
 3. Dashboard
 
 Documentation:
