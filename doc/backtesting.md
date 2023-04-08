@@ -1,5 +1,5 @@
 ## Backtesting
-This library is specifically designed for using volatility model to set stop loss for a portfolio and values its annualized return, cummulative return and maximium drawdown.
+This library `backtesting` is specifically designed for using volatility model to set stop loss for a portfolio and values its annualized return, cummulative return and maximium drawdown.
 
 ### Logic Behind: stong hold if nothing happens (no violation)
 - if log(low/open) touches/exceeds the VaR => sell immediately and you buy it back at the closing price.
