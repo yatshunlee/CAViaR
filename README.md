@@ -1,4 +1,4 @@
-# SDSC6013 Topics in Financial Engineering and Technology
+# SDSC6013 Topics in Financial Engineering and Technology Group Project
 Content
 1. CAViaR Model
 2. VaR Test
