@@ -1,11 +1,12 @@
-# SDSC6013 Topics in Financial Engineering and Technology Group Project
+## SDSC6013 Topics in Financial Engineering and Technology - CAViaR by Quantile Regression
+
 Content
 1. CAViaR Model `caviar`
 2. VaR Test `var_tests`
 3. Dashboard
 
 Documentation:
-- [Go](./doc/README.md)
+- [Click here](./doc/README.md)
 
 Contributor(s):
 1. Angus Au-Yeung
