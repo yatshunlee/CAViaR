@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=0.002, ticker=None):
+def backtest(returns, low_open_log_difference, VaRs, ntl=100, penalty=0.002, ticker=None):
     """
     replace the return over q%-quantile VaR from day 1 to day T
     
@@ -52,7 +52,7 @@ def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=
     
     plt.figure(figsize=(8, 6))
     plt.plot(date, original, label='original')
-    plt.plot(date, new, label=f'with {int(quantile*100)}% risk control')
+    plt.plot(date, new, label='with risk control')
     if ticker is None:
         plt.title('Cummulative Return Plot')
     else:
