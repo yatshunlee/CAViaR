@@ -1,11 +1,13 @@
 ## Summary
 The objective is to determine whether the VaR model is reliable and accurate in predicting the actual losses in different market conditions, by statistically measuring comparing the actual losses of an investment or portfolio with the predicted VaR estimates.
 
-This library consists of:
+This library `var_tests` consists of:
 - Binomial test
 - Traffic light test
 - Kupiec’s POF test
 - Christoffersen’s test
+
+We referred to the "Overview of VAR Backtesting" page in the Matlab official website to build the statistical test.
 
 ## How to use
 ```
