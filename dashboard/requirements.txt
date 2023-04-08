@@ -1,0 +1,13 @@
+streamlit
+yfinance
+stocknews
+plotly-express
+alpha-vantage
+arch
+deta
+streamlit-option-menu
+numpy
+pandas
+matplotlib
+scipy
+statsmodels

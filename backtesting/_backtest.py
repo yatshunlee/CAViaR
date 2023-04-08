@@ -41,11 +41,10 @@ def backtest(returns, low_open_log_difference, VaRs, quantile, ntl=100, penalty=
     new = new * ((backtest_df['low/open'] < backtest_df['VaR']) * -penalty + 1)
     
     # some statistics
-    print(sharpe_ratio(new-1))
     stat1 = annualized_return(new-1)
     stat2 = cumulative_return(new-1)
     stat3 = maximum_drawdown(new-1)
-    print(sharpe_ratio(returns/100))
+    
     stat4 = annualized_return(returns/100)
     stat5 = cumulative_return(returns/100)
     stat6 = maximum_drawdown(returns/100)

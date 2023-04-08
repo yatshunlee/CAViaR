@@ -1,0 +1,9 @@
+Experiment info:
+to use 4 different caviar functions to fit the data
+- SPY
+- 2001-2015 (in)
+- 2016-03/2023 (out)
+- RQ (renamed from numeric)
+- implementation.ipynb
+
+obtaining the plots and the statistics

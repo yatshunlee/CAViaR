@@ -150,7 +150,7 @@ class CaviarModel:
         
         # To compute the variance and covariance matrix
         self.T = len(returns)
-        VaRs = self.predict(returns, self.VaR0_in)
+        VaRs = self.predict(returns, predict_mode='in')
         self.VaR0_out = VaRs[-1]
         
         self.vc_matrix, self.D, self.gradient = variance_covariance(
@@ -181,9 +181,10 @@ class CaviarModel:
         beta_df.index = [f'beta{i+1}' for i in range(len(self.beta))]
         return beta_df
         
-    def predict(self, returns, VaR0=None):
+    def predict(self, returns, predict_mode='out'):
         """
         :param: returns (array-like): a series of returns
+        :param: predict_mode (str): either 'in' or 'out'
         :param: VaR0 (float): Initial VaR0. Default is the VaR0 (out-of-samples)
         :returns: negative VaRs (array-like): including the predicted realization and forecast
         """
@@ -191,9 +192,14 @@ class CaviarModel:
             msg = ('This CaviarModel instance is not fitted yet. '
                    'Call "fit" with appropriate arguments before using this estimator.')
             raise NotFittedError(msg)
-            
-        if VaR0 is None:
+        
+        if predict_mode == 'out':
             VaR0 = self.VaR0_out
+        elif predict_mode == 'in':
+            VaR0 = self.VaR0_in
+        else:
+            raise ValueError("predict_mode either 'in' or 'out'")
+            
         returns = np.array(returns)
         VaRs = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
         return VaRs
@@ -209,10 +215,11 @@ class CaviarModel:
                    'Call "fit" with appropriate arguments before using this estimator.')
             raise NotFittedError(msg)
             
-        VaRs = self.predict(returns)
         if test_mode == 'in':
+            VaRs = self.predict(returns, predict_mode='in')
             return dq_test(True, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.T, self.LAGS)
         elif test_mode == 'out':
+            VaRs = self.predict(returns, predict_mode='out')
             return dq_test(False, self.model, returns, self.quantile, VaRs[:-1], self.D, self.gradient, self.T, self.LAGS)
         else:
             raise ValueError('Test mode must be one of {"in", "out"}')
@@ -221,12 +228,19 @@ class CaviarModel:
         """
         plot the positive VaR and the violations in the fitting process
         :param: returns (array-like):
+        :param: mode(str): either in or out
         """
         if self.beta is None:
             msg = ('This CaviarModel instance is not fitted yet. '
                    'Call "fit" with appropriate arguments before using this estimator.')
             raise NotFittedError(msg)
             
+        try:
+            x_axis = returns.index
+        except:
+            x_axis = None
+        returns = np.array(returns)
+        
         if mode == 'in':
             VaR0 = self.VaR0_in
         elif mode == 'out':
@@ -234,11 +248,6 @@ class CaviarModel:
         else:
             raise ValueError('mode must be either "in" or "out".')
         
-        try:
-            x_axis = returns.index
-        except:
-            x_axis = None
-        returns = np.array(returns)
         VaRs = self.caviar(returns, self.beta, self.quantile, VaR0, self.G)
         plot_caviar(returns, VaRs[:-1], self.quantile, self.model, x_axis)
         

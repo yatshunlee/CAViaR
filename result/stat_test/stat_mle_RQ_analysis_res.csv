@@ -1,0 +1,12 @@
+,0,1,2,3,4,5,6,7
+model,adaptive,symmetric,asymmetric,igarch,adaptive,symmetric,asymmetric,igarch
+quantile,0.05,0.05,0.05,0.05,0.01,0.01,0.01,0.01
+loss,rejected,accepted,accepted,accepted,accepted,accepted,accepted,accepted
+mle's loss,0.131943,0.126727,0.12414,0.126657,0.04029,0.035271,0.033553,0.034229
+RQ's loss,0.130347,0.126727,0.12414,0.12625,0.039905,0.034448,0.033489,0.034221
+hit_rate_in,rejected,accepted,rejected,rejected,accepted,rejected,accepted,accepted
+mle's hit_rate_in,0.049258,0.050124,0.050159,0.049576,0.009244,0.009897,0.01003,0.010277
+RQ's hit_rate_in,0.047526,0.050124,0.050247,0.050256,0.009288,0.010065,0.010074,0.010322
+hit_rate_out,rejected,accepted,accepted,accepted,accepted,accepted,accepted,accepted
+mle's hit_rate_out,0.055428,0.039474,0.036842,0.04015,0.010216,0.015058,0.014675,0.012975
+RQ's hit_rate_out,0.042361,0.039474,0.036824,0.04057,0.009923,0.015351,0.014839,0.012975
