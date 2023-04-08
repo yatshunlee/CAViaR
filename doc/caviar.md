@@ -55,8 +55,8 @@ caviar_model.fit(in_samples)
 print(caviar_model.beta_summary())
 
 # predict the fittedvalues
-in_VaR_predicted = caviar_model.predict(in_samples, caviar_model.VaR0_in)
-out_VaR_predicted = caviar_model.predict(out_samples, caviar_model.VaR0_out)
+in_VaR_predicted = caviar_model.predict(in_samples, 'in')
+out_VaR_predicted = caviar_model.predict(out_samples, 'out')
 
 # get the predicted values
 in_VaR_fitted, in_VaR_forecast = in_VaR_predicted[:-1], in_VaR_predicted[-1]
