@@ -76,3 +76,8 @@ print(caviar_model.dq_test(out_samples, 'out'))
 ```
 
 Notice that since the model is a time series model, when you want to perform out of sample prediction, the in-sample and out-of-sample data must be consecutive. If the in-sample are from 0, 1, ..., T, then the out-of-sample must be starting from T+1, T+2, ...
+
+## References
+- Engle, R. F., & Manganelli, S. (2004). CAViaR: Conditional autoregressive value at risk by regression quantiles. Journal of business & economic statistics, 22(4), 367-381.
+- Chen, C. W., Gerlach, R., Hwang, B. B., & McAleer, M. (2012). Forecasting value-at-risk using nonlinear regression quantiles and the intra-day range. International Journal of Forecasting, 28(3), 557-574.
+- Rubia, A., & Sanchis-Marco, L. (2013). On downside risk predictability through liquidity and trading activity: A dynamic quantile approach. International Journal of Forecasting, 29(1), 202-219.
