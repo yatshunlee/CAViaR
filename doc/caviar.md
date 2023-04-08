@@ -33,10 +33,14 @@ where:
 - $f_t(\beta)$ is the predicted VaR at period t
 - $\theta$ is the quantile level, which ranges from 0 to 1
 
-### Optimization Method
+### Optimization Method (with some modification)
+#### Modification 1
 We optimized the problem differently. Instead of best start: picking m best $\beta$ from n random start, we use random start method, m = n = 1, since we have found that best start and random start don't show a huge difference on the loss value and hit rate (in and out of samples) in the experiment of testing their repeatabilities.
-
-Instead of usibg simplex algorithm followed by quasi-newton method, we have used L-BFGS-B to optimize the problems.
+#### Modification 2
+Instead of using simplex algorithm followed by quasi-newton method, we have used L-BFGS-B to optimize the problems.
+#### Modification 3
+Estimated parameters and performances are much stable compared to the unbounded solution (for asymmetric slope and IGARCH).
+We bounded the parameters in (-1, 1) except IGARCH where its bound is (0, 1)
 
 ## Example
 ```
