@@ -77,8 +77,8 @@ def initialize_betas(returns, model, caviar, obj, quantile, VaR0):
         p = 3
     
     # for faster version
-    n = 50
-    m = 5
+    n = 1
+    m = 1
     
     print(f'Generating {m} best initial betas out of {n}...')
     random_betas = np.random.uniform(0, 1, (n, p))

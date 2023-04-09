@@ -45,7 +45,8 @@ def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, in_T, L
     # k = 40 if quantile == 0.01 else 60
     # following this approach:
     # Rubia, A., & Sanchis-Marco, L. (2013). On downside risk predictability through liquidity and trading activity: A dynamic quantile approach
-    k = int(np.sqrt(in_T))
+    # k = int(np.sqrt(in_T))
+    k = int(np.sqrt(T))
     bandwidth = sorted_result[k]
     
     constant = np.ones(T - LAGS)

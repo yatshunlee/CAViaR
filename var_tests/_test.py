@@ -71,9 +71,16 @@ def kupiec_pof_test(returns, VaRs, quantile):
     x = np.array(returns < VaRs).sum()
     N = len(returns)
     
+    # below suffer from overflowing issue possibly:
     numerator = (1 - p) ** (N-x) * p ** x
     denominator = (1 - x / N) ** (N-x) * (x / N) ** x
     LR_POF = -2 * np.log(numerator / denominator)
+    
+    # below suffer from overflowing issue possibly:
+#     LR_POF = (N - x) * np.log(1 - p) + x * np.log(p)
+#     LR_POF -= (N - x) * np.log(1 - x / N) + x * np.log(x / N)
+#     LR_POF = -2 * LR_POF
+    
     return chi2.cdf(LR_POF, df=1)
     
     
@@ -106,19 +113,17 @@ def christoffersen_test(returns, VaRs):
     pi1 = n11 / (n10 + n11) # pr(fail given fail at t-1)
     pi = (n01 + n11) / (n00 + n01 + n10 + n11) # pr(fail on t)
     
-    numerator = (1 - pi) ** (n00 + n10) * pi ** (n01 + n11)
-    denominator = (1 - pi0) ** n00 * pi0 ** n01 * (1 - pi1) ** n10 * pi1 ** n11
-    LR_CCI = -2 * np.log(numerator / denominator)
+    # below suffer from overflowing issue:
+    # numerator = (1 - pi) ** (n00 + n10) * pi ** (n01 + n11)
+    # denominator = (1 - pi0) ** n00 * pi0 ** n01 * (1 - pi1) ** n10 * pi1 ** n11
+    # LR_CCI = -2 * np.log(numerator / denominator)
     
-#     numerator_1 = (1 - pi) ** (n00 + n10)
-#     numerator_2 = pi ** (n01 + n11)
-#     denominator_1 = (1 - pi0) ** n00
-#     denominator_2 = pi0 ** n01
-#     denominator_3 = (1 - pi1) ** n10
-#     denominator_4 = pi1 ** n11
-#     LR_CCI = -2 * np.log(
-#         (numerator_1 / denominator_1 / denominator_2) *
-#         (numerator_2 / denominator_3 / denominator_4)
-#     )
+    LR_CCI = (n00 + n10) * np.log(1 - pi)
+    LR_CCI += (n01 + n11) * np.log(pi)
+    LR_CCI -= n00 * np.log(1 - pi0)
+    LR_CCI -= n01 * np.log(pi0)
+    LR_CCI -= n10 * np.log(1 - pi1)
+    LR_CCI -= n11 * np.log(pi1)
+    LR_CCI = -2 * LR_CCI
     
     return chi2.cdf(LR_CCI, df=1)
