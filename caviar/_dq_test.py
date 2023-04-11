@@ -79,13 +79,13 @@ def dq_test(in_sample_mode, model, returns, quantile, VaRs, D, gradient, in_T, L
 
         # compute the DQ tests
         DQ_stat_in = HIT.T @ X_in @ inv(M @ M.T) @ X_in.T @ HIT / (quantile * (1 - quantile))
-        DQ_pval_in = chi2.cdf(DQ_stat_in, df=X_in.shape[1])
+        DQ_pval_in = chi2.sf(DQ_stat_in, df=X_in.shape[1])
         return DQ_pval_in 
         
     else:
         X_out = np.c_[constant, VaRs_forecast, Z]
         DQ_stat_out = HIT.T @ X_out @ inv(X_out.T @ X_out) @ X_out.T @ HIT / (quantile * (1 - quantile))
-        DQ_pval_out = chi2.cdf(DQ_stat_out, df=X_out.shape[1])
+        DQ_pval_out = chi2.sf(DQ_stat_out, df=X_out.shape[1])
         return DQ_pval_out
 
 def variance_covariance(beta, model, T, returns, quantile, VaRs, G):
