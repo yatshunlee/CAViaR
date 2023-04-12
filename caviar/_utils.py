@@ -12,12 +12,13 @@ def plot_caviar(returns, VaR, quantile, model, x_axis=None):
         x_axis = range(len(returns))
         x_lbl = 'time'
     
-    fig, axes = plt.subplots(2, 1, figsize=(8, 6*2))
+    fig, axes = plt.subplots(2, 1, figsize=(10, 8*2))
     
     axes[0].plot(x_axis, -VaR)
     axes[0].set_title(f'Estimated CAViaR Plot [{model.capitalize()}]')
     axes[0].set_xlabel(x_lbl)
     axes[0].set_ylabel('CAViaR')
+    axes[0].tick_params(axis='x', labelrotation=45)
     
     axes[1].plot(x_axis, returns, label='return', zorder=1)
     axes[1].plot(x_axis, VaR, label='negative VaR', zorder=2)
@@ -29,6 +30,7 @@ def plot_caviar(returns, VaR, quantile, model, x_axis=None):
     axes[1].set_xlabel(x_lbl)
     axes[1].set_ylabel(f'Return (%)')
     axes[1].legend()
+    axes[1].tick_params(axis='x', labelrotation=45)
     
     return fig
     
@@ -53,7 +55,7 @@ def plot_news_impact_curve(beta, model, quantile, VaR, G):
     else:
         raise ValueError('Wrong model')
     
-    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     ax.plot(y, impact)
     ax.set_xlabel('y_t-1')
     ax.set_ylabel('VaR_t')
