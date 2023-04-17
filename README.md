@@ -1,4 +1,7 @@
 ## Evaluate CAViaR by Quantile Regression
+### Quick Notice
+This package is still under the testing stage, i.e., not 100% ready to use.
+
 ### Quick Summary
 This is a group project of SDSC6013 Topics in Financial Engineering and Technology. We built a value-at-risk model directly modeling the quantile return directly by referring the paper CAViaR: Conditional Autoregressive Value at Risk by Regression Quantiles by Engle and Manganelli (2004).
 
