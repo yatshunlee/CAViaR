@@ -5,7 +5,9 @@ This is a group project of SDSC6013 Topics in Financial Engineering and Technolo
 This package `caviar` is currently under development and may contain bugs or incomplete features. Please use with caution and do not use in production environments.
 
 ## Known Issues
-TBC
+- https://github.com/yatshunlee/CAViaR-Project/issues
+
+You are welcome to report bug in `issues`. :)
 
 ## Quick Summary
 We constructed two libraries: `caviar` and `var_tests` to model the value at risk and backtest the VaR estimate. For presentation, we constructed a dashboard to showcase how it can be possibly applied. If you are looking for some inspiration, we strongly suggest to take a look of the documentation below and the code in `notebook-example`.
