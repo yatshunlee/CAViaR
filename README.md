@@ -17,7 +17,7 @@ Libraries:
 2. VaR Test `var_tests`
 
 Demo Application:
-1. Dashboard `dashboard`
+- [Dashboard](https://youtu.be/W-qCPa_voCM)
 
 Documentation:
 - [Click here](./doc/README.md)
