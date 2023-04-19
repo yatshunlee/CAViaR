@@ -6,7 +6,7 @@ This package `caviar` is currently under development and may contain bugs or inc
 
 ## Known Issues
 - [Adaptive model is instable.](https://github.com/yatshunlee/CAViaR-Project/issues/5)
-- [Doesnt work for some tickers.](https://github.com/yatshunlee/CAViaR-Project/issues/6)
+- [The model doesnt current support some tickers.](https://github.com/yatshunlee/CAViaR-Project/issues/6)
 
 You are welcome to report bug in https://github.com/yatshunlee/CAViaR-Project/issues. :)
 
