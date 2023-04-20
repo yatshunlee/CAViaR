@@ -22,11 +22,39 @@ if ticker:
     df = yf.download(ticker, start='2009-12-01')
     df['Return'] = df['Close'].pct_change().dropna()
     returns = df['Return']
-    low_open_log_difference = (df['Low'].apply(lambda x: np.log(x)) - df['Open'].apply(lambda x: np.log(x))).dropna()
+    # low_open_log_difference = (df['Low'].apply(lambda x: np.log(x)) - df['Open'].apply(lambda x: np.log(x))).dropna()
 
     in_samples = returns['2010':'2019'] * 100
     out_of_samples = returns['2020':] * 100
-
+    
+    if in_samples.isna().sum() > 0:
+        count = in_samples.isna().sum()
+        verb = "is" if count == 1 else "are"
+        plural = '' if count == 1 else 's'
+        warning_msg_in = f'There {verb} {count} missing value{plural} in the in-sample data. '
+        in_samples = in_samples.interpolate(method='linear')
+        if in_samples.isna().sum() > 0:
+            in_samples = in_samples.dropna()
+            warning_msg_in += "Drop the missing value."
+        else:
+            warning_msg_in += "It is filled by interpolation."
+        
+        st.warning(warning_msg_in)
+        
+    if out_of_samples.isna().sum() > 0:
+        count = out_of_samples.isna().sum()
+        verb = "is" if count == 1 else "are"
+        plural = '' if count == 1 else 's' 
+        warning_msg_out = f'There {verb} {count} missing value{plural} in the out-of-sample data. '
+        out_of_samples = out_of_samples.interpolate(method='linear')
+        if out_of_samples.isna().sum() > 0:
+            out_of_samples = out_of_samples.dropna()
+            warning_msg_out += "Drop the missing value."
+        else:
+            warning_msg_out += "It is filled by interpolation."
+    
+        st.warning(warning_msg_out)
+    
     col1, col2, col3 = st.columns(3)
 
     option_caviar = option_quantile = option_method = None
