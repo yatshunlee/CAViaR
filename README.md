@@ -17,7 +17,7 @@ Libraries:
 2. VaR Test `var_tests`
 
 Demo Application:
-- [Dashboard](https://youtu.be/W-qCPa_voCM)
+- [dashboard_caviar](https://youtu.be/1NhIeDSbeXE)
 
 Documentation:
 - [Click here](./doc/README.md)
