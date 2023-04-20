@@ -5,8 +5,7 @@ This is a group project of SDSC6013 Topics in Financial Engineering and Technolo
 As I found the original optimization approach is computational costly, I have modified a bit in the box constraints as well as the starting approach (the initial guess/start of the estimated parameters). For details, you may want to take a look on the documentation (You may easily change the setting back accordingly in the source code). So, this package `caviar` is currently under development and may contain bugs or incomplete features. Please use with caution and do not use in production environments.
 
 ## Known Issues
-- [Adaptive model is instable.](https://github.com/yatshunlee/CAViaR-Project/issues/5)
-- [The model doesnt currently support some tickers.](https://github.com/yatshunlee/CAViaR-Project/issues/6)
+- TBC
 
 You are welcome to report bug in https://github.com/yatshunlee/CAViaR-Project/issues. :)
 
