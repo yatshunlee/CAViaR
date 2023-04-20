@@ -108,12 +108,14 @@ def optimize(initial_beta, returns, model, quantile, obj, caviar, tol, VaR0):
     current_beta = initial_beta['beta']
     current_loss = initial_beta['loss']
     
+    # with bounds
     if model == 'igarch':
         bounds = [(1e-10, None)] + [(1e-10, 1) for _ in range(len(current_beta)-1)]
     else:
         bounds = [(None, None)] + [(-1, 1) for _ in range(len(current_beta)-1)]
-        
-    # bounds = [(None, None) for _ in range(len(current_beta))] # try with no bound
+    
+    # # with no bound
+    # bounds = [(None, None) for _ in range(len(current_beta))]
     
     count = 0
     print(f'Update {count}:', current_loss)
