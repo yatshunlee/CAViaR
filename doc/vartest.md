@@ -6,6 +6,7 @@ This library `var_tests` consists of:
 - Traffic light test
 - Kupiec’s POF test
 - Christoffersen’s test
+- Dynamic Quantile test
 
 We referred to the "Overview of VAR Backtesting" page in the Matlab official website to build the statistical test.
 
@@ -28,7 +29,13 @@ pval = kupiec_pof_test(returns, VaRs, quantile)
 # For Christoffersen’s test: 
 # It measures the dependency between consecutive days only.
 pval = christoffersen_test(returns, VaRs)
+
+# For DQ test: 
+# It measures the unbiasedness and independence of VaR estimate
+pval = dq_test(returns, VaRs, quantile)
 ```
 
 ## Reference
 - MathWorks. (n.d.). Overview of VAR Backtesting. Retrieved March 31, 2023, from https://ww2.mathworks.cn/help/risk/overview-of-var-backtesting.html
+- Engle III, R. F., & Manganelli, S. (1999). CAViaR: conditional value at risk by quantile regression.
+- Dumitrescu*, E. I., Hurlin**, C., & Pham***, V. (2012). Backtesting value-at-risk: from dynamic quantile to dynamic binary tests. Finance, 33(1), 79-112.
