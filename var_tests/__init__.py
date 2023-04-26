@@ -5,5 +5,6 @@ __all__ = [
     'kupiec_pof_test', 
     'christoffersen_test',
     'traffic_light_test',
-    'hit_rate'
+    'hit_rate',
+    'dq_test'
 ]
