@@ -134,6 +134,8 @@ def dq_test(returns, VaRs, quantile, K=4):
     Define a variable HIT_t = Y_t < VAR_t - quantile.
     HIT_t should not be predicted based on information known at time = t-1.
     
+    Reference: Dumitrescu*, E. I., Hurlin**, C., & Pham***, V. (2012). Backtesting value-at-risk: from dynamic quantile to dynamic binary tests. Finance, 33(1), 79-112.
+    
     :param: returns (array-like)
     :param: VaRs (array-like)
     :param: quantile (float): 1 - VaR level
