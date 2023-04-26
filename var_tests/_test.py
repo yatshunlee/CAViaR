@@ -125,7 +125,7 @@ def christoffersen_test(returns, VaRs):
 
 def dq_test(returns, VaRs, quantile, K=4):
     """
-    regression-based testing method:
+    regression-based testing method [1]:
     Hit_t = beta0 + beta1 * Hit_t-1 + ... + betaK * Hit_t-K +
                     gamma1 * VaR_t-1 + ... + gammaK * VaR_t-K +
                     delta1 * return_t-1 + ... + deltaK * return_t-K
@@ -134,7 +134,24 @@ def dq_test(returns, VaRs, quantile, K=4):
     Define a variable HIT_t = Y_t < VAR_t - quantile.
     HIT_t should not be predicted based on information known at time = t-1.
     
-    Reference: Dumitrescu*, E. I., Hurlin**, C., & Pham***, V. (2012). Backtesting value-at-risk: from dynamic quantile to dynamic binary tests. Finance, 33(1), 79-112.
+    X = [Hit_lagged, VaR_lagged, return_lagged], where XXX_lagged = [XXX_t-1, ..., XXX_t-K] is a (n-K) x K matrix
+    y = Hit vector with no lagged values. (a n-K vector)
+    
+    coef_hat = coef_estimated = (X.T @ X)^-1 @ X.T @ y,
+    where coef_estimated = [beta_estimated, gamma_estimated, delta_estimated] is a 1 x (1 + 3K) vector
+    
+    the asymptotic distribution of the OLS estimator under the null can be easily established,
+    invoking an appropriate central limit theorem [2]: 
+        
+        coef_hat ~ N(0, q * (1 - q) * (X.T @ X)^-1)
+    
+    It is now straightforward to derive the Dynamic Quantile test statistic:
+    
+        DQ = coef_hat.T @ X.T @ X @ coef_hat / (q * (1 - q)) ~ Chi2(3*K + 1)
+    
+    References: 
+    [1] Dumitrescu*, E. I., Hurlin**, C., & Pham***, V. (2012). Backtesting value-at-risk: from dynamic quantile to dynamic binary tests. Finance, 33(1), 79-112.
+    [2] Engle III, R. F., & Manganelli, S. (1999). CAViaR: conditional value at risk by quantile regression.
     
     :param: returns (array-like)
     :param: VaRs (array-like)
