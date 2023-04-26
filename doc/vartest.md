@@ -8,8 +8,6 @@ This library `var_tests` consists of:
 - Christoffersen’s test
 - Dynamic Quantile test
 
-We referred to the "Overview of VAR Backtesting" page in the Matlab official website to build the statistical test.
-
 ## How to use
 ```
 # For binomial test: 
