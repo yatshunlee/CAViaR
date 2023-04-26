@@ -6,7 +6,8 @@ import pandas as pd
 from scipy.stats import chi2, binom_test, binom, norm
 
 
-hit_rate = lambda ret, var: np.mean(ret < var)
+def hit_rate(returns, VaRs):
+    return np.mean(returns < VaRs)
 
 def binomial_test(returns, VaRs, quantile):
     """
@@ -119,3 +120,46 @@ def christoffersen_test(returns, VaRs):
     )
 
     return chi2.sf(LR_CCI, df=1)
+
+    return ((y < VaR) - quantile)
+
+def dq_test(returns, VaRs, quantile, K=4):
+    """
+    regression-based testing method:
+    Hit_t = beta0 + beta1 * Hit_t-1 + ... + betaK * Hit_t-K +
+                    gamma1 * VaR_t-1 + ... + gammaK * VaR_t-K +
+                    delta1 * return_t-1 + ... + deltaK * return_t-K
+    
+    H0: the coefficients above (beta, gamma, delta) = 0.
+    Define a variable HIT_t = Y_t < VAR_t - quantile.
+    HIT_t should not be predicted based on information known at time = t-1.
+    
+    :param: returns (array-like)
+    :param: VaRs (array-like)
+    :param: quantile (float): 1 - VaR level
+    :param: K (int): Lag period. Default is 4.
+    """
+    Hit = ((y < VaRs) - quantile)
+    
+    y = Hit[K:]
+    
+    X = np.zeros((Hit.shape[0]-K, 1 + K * 3))
+    X[:, 0] = np.ones(Hit.shape[0]-K)
+    
+    for i in range(K):
+        i += 1
+        X[:, i] = VaRs[K-i:-i]
+
+    for i in range(K):
+        i += 1
+        X[:, i+K] = Hit[K-i:-i]
+
+    for i in range(K):
+        i += 1
+        X[:, i+K*2] = returns[K-i:-i] ** 2
+    
+    beta_ols = np.linalg.inv(X.T @ X) @ X.T @ y 
+    DQ = beta_ols.T @ X.T @ X @ beta_ols
+    DQ = DQ / (quantile * (1 - quantile))
+    
+    return chi2.sf(DQ, df=len(beta_ols))
