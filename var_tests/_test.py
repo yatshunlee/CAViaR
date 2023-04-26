@@ -7,6 +7,10 @@ from scipy.stats import chi2, binom_test, binom, norm
 
 
 def hit_rate(returns, VaRs):
+    """
+    :params: returns (array)
+    :params: VaRs (array)
+    """
     return np.mean(returns < VaRs)
 
 def binomial_test(returns, VaRs, quantile):
@@ -125,6 +129,10 @@ def christoffersen_test(returns, VaRs):
 
 def dq_test(returns, VaRs, quantile, K=4):
     """
+    null hypothesis: 
+    the hit variable at period t is orthogonal to (not correlated to) any explanatory variable that belongs
+    to the information set at period t - 1, i.e. unbiasedness and independence hit.
+    
     regression-based testing method [1]:
     Hit_t = beta0 + beta1 * Hit_t-1 + ... + betaK * Hit_t-K +
                     gamma1 * VaR_t-1 + ... + gammaK * VaR_t-K +
@@ -157,6 +165,7 @@ def dq_test(returns, VaRs, quantile, K=4):
     :param: VaRs (array-like)
     :param: quantile (float): 1 - VaR level
     :param: K (int): Lag period. Default is 4.
+    :returns: pvalue
     """
     Hit = ((y < VaRs) - quantile)
     
