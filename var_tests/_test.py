@@ -167,7 +167,7 @@ def dq_test(returns, VaRs, quantile, K=4):
     :param: K (int): Lag period. Default is 4.
     :returns: pvalue
     """
-    Hit = ((y < VaRs) - quantile)
+    Hit = ((returns < VaRs) - quantile)
     
     y = Hit[K:]
     
