@@ -22,5 +22,5 @@ Demo Application:
 Documentation:
 - [Click here](./doc/README.md)
 
-Main Author / Maintainer:
+Main Author(s) / Maintainer(s) of `caviar` and `var_tests`:
 1. Jasper Lee
