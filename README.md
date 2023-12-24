@@ -22,6 +22,5 @@ Demo Application:
 Documentation:
 - [Click here](./doc/README.md)
 
-Contributor(s):
-1. Angus Au-Yeung
-2. Jasper Lee
+Main Author / Maintainer:
+1. Jasper Lee
