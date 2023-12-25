@@ -2,7 +2,7 @@
 This is a group project of SDSC6013 Topics in Financial Engineering and Technology. We built a value-at-risk model directly modeling the quantile return directly by referring the paper CAViaR: Conditional Autoregressive Value at Risk by Regression Quantiles by Engle and Manganelli (2004).
 
 ## Disclaimer
-As I found the original optimization approach is computational costly, I have modified a bit the box constraints as well as the starting approach (the initial guess/start of the estimated parameters). For details, you may want to take a look on the documentation (You may easily change the setting back accordingly in the source code). So, please use this package `caviar` with caution and do not use in production environments.
+As I found the original optimization approach is computational costly, I have modified a bit the box constraints as well as the starting approach (the initial guess/start of the estimated parameters). For details, you may want to take a look on the documentation (You may easily change the setting back accordingly in the source code). So, please use this package `caviar` with caution.
 
 ## Known Issues
 - TBC
