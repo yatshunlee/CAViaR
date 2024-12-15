@@ -60,7 +60,9 @@ caviar_model.fit(in_samples)
 # print the statistic of beta
 print(caviar_model.beta_summary())
 
-# predict the fittedvalues
+# predict the fitted values, giving VaRs from day 0 to day T + 1
+# VaRs[0] of 'in' gives emperical VaR
+# whereas VaRs[0] of 'out' gives in_VaR_predicted
 in_VaR_predicted = caviar_model.predict(in_samples, 'in')
 out_VaR_predicted = caviar_model.predict(out_samples, 'out')
 
